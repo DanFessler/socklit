@@ -1,0 +1,46 @@
+{
+  "options": {
+    "sessions": [
+      250
+    ],
+    "seconds": 10,
+    "warmup": 3,
+    "tickMs": 250,
+    "markets": 40,
+    "moveChance": 0.04,
+    "quoteKeys": false,
+    "mine": false,
+    "url": null,
+    "port": 8799,
+    "batch": 50,
+    "identityTicks": 4,
+    "json": "research/probes/odds-lowmove.json"
+  },
+  "results": [
+    {
+      "sessions": 250,
+      "connected": 250,
+      "elapsedSeconds": 10.01,
+      "renders": 9500,
+      "rendersPerSecond": 948.9,
+      "microsecondsPerSecond": 66335,
+      "cores": 0.0663,
+      "microsecondsPerNode": 0.104,
+      "nodesPerRender": 671,
+      "quietFraction": 0,
+      "updateBytesPerSecond": 1609984,
+      "retainedBytesPerSession": 10331,
+      "framesReceived": 13000,
+      "bytesReceived": 23269750,
+      "completeTicks": 38,
+      "deliveryP50": 21.86,
+      "deliveryP95": 28.67,
+      "deliveryMax": 38.6,
+      "spreadMean": 22.94,
+      "spreadMax": 37.99,
+      "identicalFraction": 1,
+      "identityTicksSampled": 4,
+      "otherProbeRenders": 0
+    }
+  ]
+}

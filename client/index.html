@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Server-driven todos</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <!-- Everything inside #app is replicated from the server session. -->
+      <main id="app" class="app"></main>
+
+      <aside class="inspector">
+        <header class="inspector-header">
+          <h2>Protocol</h2>
+          <p class="inspector-meta">
+            <span class="status" id="status" data-state="connecting"
+              >connecting</span
+            >
+            <span class="revision">revision <span id="revision">0</span></span>
+          </p>
+          <p class="inspector-summary" id="protocol-summary"></p>
+
+          <div class="inspector-controls">
+            <label class="control" for="probe">
+              <span>Probe</span>
+              <select id="probe"></select>
+            </label>
+          </div>
+
+          <div class="inspector-controls">
+            <label class="control" for="latency">
+              <span>Latency</span>
+              <select id="latency"></select>
+            </label>
+            <label class="control control-inline" for="jitter">
+              <input type="checkbox" id="jitter" />
+              <span>jitter</span>
+            </label>
+          </div>
+          <p class="inspector-latency" id="perceived"></p>
+        </header>
+        <ol class="protocol-entries" id="protocol-entries"></ol>
+      </aside>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

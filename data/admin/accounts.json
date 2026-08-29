@@ -1,0 +1,284 @@
+{
+  "accounts": [
+    {
+      "id": "acc-001",
+      "name": "Northwind Freight",
+      "owner": "dana@northwind.example",
+      "region": "us-east",
+      "plan": "business",
+      "status": "active",
+      "seats": 240,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-002",
+      "name": "Harbourline Media",
+      "owner": "kit@harbourline.example",
+      "region": "eu-west",
+      "plan": "team",
+      "status": "active",
+      "seats": 42,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-003",
+      "name": "Grayfell Robotics",
+      "owner": "amara@grayfell.example",
+      "region": "us-west",
+      "plan": "enterprise",
+      "status": "active",
+      "seats": 1180,
+      "flagged": true,
+      "notes": ""
+    },
+    {
+      "id": "acc-004",
+      "name": "Tessellate Labs",
+      "owner": "yuki@tessellate.example",
+      "region": "ap-south",
+      "plan": "free",
+      "status": "trial",
+      "seats": 6,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-005",
+      "name": "Ridgeway Clinics",
+      "owner": "omar@ridgeway.example",
+      "region": "us-east",
+      "plan": "business",
+      "status": "suspended",
+      "seats": 310,
+      "flagged": true,
+      "notes": ""
+    },
+    {
+      "id": "acc-006",
+      "name": "Kestrel Analytics",
+      "owner": "nina@kestrel.example",
+      "region": "eu-west",
+      "plan": "team",
+      "status": "active",
+      "seats": 58,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-007",
+      "name": "Alder & Vine",
+      "owner": "pete@aldervine.example",
+      "region": "us-east",
+      "plan": "free",
+      "status": "active",
+      "seats": 3,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-008",
+      "name": "Bramblewood Coop",
+      "owner": "sara@bramblewood.example",
+      "region": "eu-north",
+      "plan": "team",
+      "status": "active",
+      "seats": 77,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-009",
+      "name": "Quarrystone Build",
+      "owner": "leo@quarrystone.example",
+      "region": "us-west",
+      "plan": "business",
+      "status": "active",
+      "seats": 194,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-010",
+      "name": "Pelagic Shipping",
+      "owner": "mira@pelagic.example",
+      "region": "ap-south",
+      "plan": "enterprise",
+      "status": "active",
+      "seats": 860,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-011",
+      "name": "Lantern Health",
+      "owner": "arjun@lanternhealth.example",
+      "region": "us-east",
+      "plan": "business",
+      "status": "trial",
+      "seats": 120,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-012",
+      "name": "Foxglove Studio",
+      "owner": "iris@foxglove.example",
+      "region": "eu-west",
+      "plan": "free",
+      "status": "trial",
+      "seats": 4,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-013",
+      "name": "Meridian Trucking",
+      "owner": "hal@meridian.example",
+      "region": "us-central",
+      "plan": "team",
+      "status": "suspended",
+      "seats": 65,
+      "flagged": true,
+      "notes": ""
+    },
+    {
+      "id": "acc-014",
+      "name": "Saltmarsh Energy",
+      "owner": "wren@saltmarsh.example",
+      "region": "eu-north",
+      "plan": "enterprise",
+      "status": "active",
+      "seats": 640,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-015",
+      "name": "Copperfield Retail",
+      "owner": "juno@copperfield.example",
+      "region": "us-west",
+      "plan": "business",
+      "status": "active",
+      "seats": 288,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-016",
+      "name": "Iversen Legal",
+      "owner": "erik@iversen.example",
+      "region": "eu-north",
+      "plan": "team",
+      "status": "churned",
+      "seats": 21,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-017",
+      "name": "Palegrove Farms",
+      "owner": "tia@palegrove.example",
+      "region": "us-central",
+      "plan": "free",
+      "status": "trial",
+      "seats": 8,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-018",
+      "name": "Nightjar Security",
+      "owner": "roan@nightjar.example",
+      "region": "eu-west",
+      "plan": "enterprise",
+      "status": "active",
+      "seats": 402,
+      "flagged": true,
+      "notes": ""
+    },
+    {
+      "id": "acc-019",
+      "name": "Willowbrook Schools",
+      "owner": "faye@willowbrook.example",
+      "region": "us-east",
+      "plan": "business",
+      "status": "active",
+      "seats": 355,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-020",
+      "name": "Corvid Logistics",
+      "owner": "sam@corvid.example",
+      "region": "ap-south",
+      "plan": "team",
+      "status": "active",
+      "seats": 91,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-021",
+      "name": "Halcyon Travel",
+      "owner": "bo@halcyon.example",
+      "region": "eu-west",
+      "plan": "free",
+      "status": "churned",
+      "seats": 2,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-022",
+      "name": "Ferrous Works",
+      "owner": "gita@ferrous.example",
+      "region": "us-central",
+      "plan": "business",
+      "status": "active",
+      "seats": 168,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-023",
+      "name": "Marlowe Publishing",
+      "owner": "ade@marlowe.example",
+      "region": "eu-north",
+      "plan": "team",
+      "status": "active",
+      "seats": 36,
+      "flagged": false,
+      "notes": ""
+    },
+    {
+      "id": "acc-024",
+      "name": "Zephyr Instruments",
+      "owner": "lena@zephyr.example",
+      "region": "us-west",
+      "plan": "enterprise",
+      "status": "suspended",
+      "seats": 720,
+      "flagged": true,
+      "notes": ""
+    }
+  ],
+  "audit": [
+    {
+      "id": "86fa5356-ed36-4afc-b1b6-30300ec947ad",
+      "at": 1787898151128,
+      "actor": "operator",
+      "action": "set status active",
+      "targets": 2
+    },
+    {
+      "id": "570f8409-116d-4b84-aa2e-d2ffac25f01b",
+      "at": 1787898072904,
+      "actor": "operator",
+      "action": "set status suspended",
+      "targets": 1
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "options": {
+    "sessions": [
+      1000
+    ],
+    "seconds": 10,
+    "warmup": 4,
+    "tickMs": 250,
+    "markets": 4,
+    "moveChance": null,
+    "quoteKeys": false,
+    "mine": false,
+    "url": null,
+    "port": 8799,
+    "batch": 100,
+    "identityTicks": 4,
+    "json": "research/probes/odds-small.json"
+  },
+  "results": [
+    {
+      "sessions": 1000,
+      "connected": 1000,
+      "elapsedSeconds": 10,
+      "renders": 39000,
+      "rendersPerSecond": 3900.3,
+      "microsecondsPerSecond": 117017,
+      "cores": 0.117,
+      "microsecondsPerNode": 0.148,
+      "nodesPerRender": 203,
+      "quietFraction": 0,
+      "updateBytesPerSecond": 3797891,
+      "retainedBytesPerSession": 3564,
+      "baselineRss": 98750464,
+      "loadedRss": 327643136,
+      "rssPerSession": 228893,
+      "framesReceived": 60500,
+      "bytesReceived": 63720500,
+      "completeTicks": 38,
+      "deliveryP50": 45.56,
+      "deliveryP95": 52.27,
+      "deliveryMax": 57.3,
+      "spreadMean": 45.33,
+      "spreadMax": 56.59,
+      "identicalFraction": 1,
+      "identityTicksSampled": 4,
+      "otherProbeRenders": 0
+    }
+  ]
+}

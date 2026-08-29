@@ -1,0 +1,29 @@
+{
+  "name": "socklit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Server-authoritative UI prototype: lit-html templates replicated over WebSockets",
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "tsx watch server/index.ts",
+    "dev:client": "vite",
+    "build:client": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "bench": "tsx scripts/bench-render.ts"
+  },
+  "dependencies": {
+    "lit-html": "^3.3.3",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.0",
+    "@types/ws": "^8.18.1",
+    "concurrently": "^10.0.5",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
+  }
+}

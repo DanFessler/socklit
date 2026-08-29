@@ -1,0 +1,10 @@
+# Dependencies for the architecture research models in this folder.
+# The models themselves are pure standard library; matplotlib is only
+# needed to regenerate the charts embedded in economics.md.
+#
+#   pip install -r research/requirements.txt
+#   python research/cost_model.py
+#   python research/latency_model.py
+#   python research/make_charts.py
+
+matplotlib>=3.8

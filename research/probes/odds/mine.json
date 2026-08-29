@@ -1,0 +1,46 @@
+{
+  "options": {
+    "sessions": [
+      250
+    ],
+    "seconds": 10,
+    "warmup": 3,
+    "tickMs": 250,
+    "markets": 40,
+    "moveChance": null,
+    "quoteKeys": false,
+    "mine": true,
+    "url": null,
+    "port": 8799,
+    "batch": 50,
+    "identityTicks": 4,
+    "json": "research/probes/odds-mine.json"
+  },
+  "results": [
+    {
+      "sessions": 250,
+      "connected": 250,
+      "elapsedSeconds": 10.01,
+      "renders": 9500,
+      "rendersPerSecond": 949,
+      "microsecondsPerSecond": 61501,
+      "cores": 0.0615,
+      "microsecondsPerNode": 0.096,
+      "nodesPerRender": 677,
+      "quietFraction": 0,
+      "updateBytesPerSecond": 7964626,
+      "retainedBytesPerSession": 10464,
+      "framesReceived": 13000,
+      "bytesReceived": 106718750,
+      "completeTicks": 38,
+      "deliveryP50": 28.13,
+      "deliveryP95": 37.06,
+      "deliveryMax": 38.13,
+      "spreadMean": 28.45,
+      "spreadMax": 37.77,
+      "identicalFraction": 1,
+      "identityTicksSampled": 4,
+      "otherProbeRenders": 0
+    }
+  ]
+}

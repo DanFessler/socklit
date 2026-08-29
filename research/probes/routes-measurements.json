@@ -1,0 +1,2802 @@
+{
+  "generatedAt": "2026-08-28T21:04:37.434Z",
+  "population": [
+    {
+      "routes": 1,
+      "sessionsPerRoute": 12,
+      "personalized": true,
+      "population": {
+        "sessions": 12,
+        "distinctTrees": 4,
+        "sessionAmortization": 3,
+        "totalInstances": 276,
+        "distinctInstances": 26,
+        "instanceDedupFraction": 0.9058,
+        "totalBytes": 30651,
+        "distinctBytes": 3230,
+        "byteDedupFraction": 0.8946
+      },
+      "group": {
+        "label": "12 sessions / 1 route(s) / personalize=on",
+        "sessions": 12,
+        "addresses": 23,
+        "identicalNodes": 22,
+        "nodeIdentityFraction": 0.9565,
+        "identicalSubtreeNodes": 21,
+        "subtreeIdentityFraction": 0.913,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h1",
+            "depth": 1,
+            "instances": 15,
+            "bytes": 1696,
+            "events": 0
+          },
+          {
+            "id": "root/h0/h0/k:dashboard",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 93,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:tasks",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 86,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2554,
+        "sharedBytes": 2194,
+        "sharedByteFraction": 0.859,
+        "divergent": [
+          "root/h0"
+        ]
+      }
+    },
+    {
+      "routes": 2,
+      "sessionsPerRoute": 6,
+      "personalized": true,
+      "population": {
+        "sessions": 12,
+        "distinctTrees": 8,
+        "sessionAmortization": 1.5,
+        "totalInstances": 300,
+        "distinctInstances": 47,
+        "instanceDedupFraction": 0.8433,
+        "totalBytes": 38229,
+        "distinctBytes": 6368,
+        "byteDedupFraction": 0.8334
+      },
+      "group": {
+        "label": "12 sessions / 2 route(s) / personalize=on",
+        "sessions": 12,
+        "addresses": 41,
+        "identicalNodes": 5,
+        "nodeIdentityFraction": 0.122,
+        "identicalSubtreeNodes": 4,
+        "subtreeIdentityFraction": 0.0976,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 3186,
+        "sharedBytes": 319,
+        "sharedByteFraction": 0.1001,
+        "divergent": [
+          "root/h0",
+          "root/h0/h0/k:dashboard",
+          "root/h0/h0/k:tasks",
+          "root/h1",
+          "root/h1/h0/k:drain",
+          "root/h1/h0/k:fanout",
+          "root/h1/h0/k:patch",
+          "root/h1/h0/k:queue",
+          "root/h1/h0/k:renders",
+          "root/h1/h0/k:sessions",
+          "root/h1/h1/k:act-1",
+          "root/h1/h1/k:act-2",
+          "root/h1/h1/k:act-3",
+          "root/h1/h1/k:act-4",
+          "root/h1/h1/k:act-5",
+          "root/h1/h1/k:act-6",
+          "root/h1/h1/k:act-7",
+          "root/h1/h1/k:act-8",
+          "root/h1/h2/k:task-01",
+          "root/h1/h2/k:task-02",
+          "root/h1/h2/k:task-03",
+          "root/h1/h2/k:task-04",
+          "root/h1/h2/k:task-05",
+          "root/h1/h2/k:task-06",
+          "root/h1/h2/k:task-07",
+          "root/h1/h2/k:task-08",
+          "root/h1/h2/k:task-09",
+          "root/h1/h2/k:task-10",
+          "root/h1/h2/k:task-11",
+          "root/h1/h2/k:task-12",
+          "root/h1/h2/k:task-13",
+          "root/h1/h2/k:task-14",
+          "root/h1/h2/k:task-15",
+          "root/h1/h2/k:task-16",
+          "root/h1/h2/k:task-17",
+          "root/h1/h2/k:task-18"
+        ]
+      }
+    },
+    {
+      "routes": 3,
+      "sessionsPerRoute": 4,
+      "personalized": true,
+      "population": {
+        "sessions": 12,
+        "distinctTrees": 12,
+        "sessionAmortization": 1,
+        "totalInstances": 268,
+        "distinctInstances": 57,
+        "instanceDedupFraction": 0.7873,
+        "totalBytes": 34075,
+        "distinctBytes": 7744,
+        "byteDedupFraction": 0.7727
+      },
+      "group": {
+        "label": "12 sessions / 3 route(s) / personalize=on",
+        "sessions": 12,
+        "addresses": 49,
+        "identicalNodes": 4,
+        "nodeIdentityFraction": 0.0816,
+        "identicalSubtreeNodes": 3,
+        "subtreeIdentityFraction": 0.0612,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2840,
+        "sharedBytes": 231,
+        "sharedByteFraction": 0.0813,
+        "divergent": [
+          "root/h0",
+          "root/h0/h0/k:dashboard",
+          "root/h0/h0/k:detail",
+          "root/h0/h0/k:tasks",
+          "root/h1",
+          "root/h1/h0/k:drain",
+          "root/h1/h0/k:fanout",
+          "root/h1/h0/k:patch",
+          "root/h1/h0/k:queue",
+          "root/h1/h0/k:renders",
+          "root/h1/h0/k:sessions",
+          "root/h1/h1/k:act-1",
+          "root/h1/h1/k:act-2",
+          "root/h1/h1/k:act-3",
+          "root/h1/h1/k:act-4",
+          "root/h1/h1/k:act-5",
+          "root/h1/h1/k:act-6",
+          "root/h1/h1/k:act-7",
+          "root/h1/h1/k:act-8",
+          "root/h1/h2/k:task-01",
+          "root/h1/h2/k:task-02",
+          "root/h1/h2/k:task-03",
+          "root/h1/h2/k:task-04",
+          "root/h1/h2/k:task-05",
+          "root/h1/h2/k:task-06",
+          "root/h1/h2/k:task-07",
+          "root/h1/h2/k:task-08",
+          "root/h1/h2/k:task-09",
+          "root/h1/h2/k:task-10",
+          "root/h1/h2/k:task-11",
+          "root/h1/h2/k:task-12",
+          "root/h1/h2/k:task-13",
+          "root/h1/h2/k:task-14",
+          "root/h1/h2/k:task-15",
+          "root/h1/h2/k:task-16",
+          "root/h1/h2/k:task-17",
+          "root/h1/h2/k:task-18",
+          "root/h1/h4/k:doing",
+          "root/h1/h4/k:done",
+          "root/h1/h4/k:todo",
+          "root/h1/h6/k:task-04",
+          "root/h1/h6/k:task-07",
+          "root/h1/h6/k:task-10",
+          "root/h1/h6/k:task-13",
+          "root/h1/h6/k:task-16"
+        ]
+      }
+    },
+    {
+      "routes": 4,
+      "sessionsPerRoute": 3,
+      "personalized": true,
+      "population": {
+        "sessions": 12,
+        "distinctTrees": 12,
+        "sessionAmortization": 1,
+        "totalInstances": 246,
+        "distinctInstances": 65,
+        "instanceDedupFraction": 0.7358,
+        "totalBytes": 30702,
+        "distinctBytes": 8692,
+        "byteDedupFraction": 0.7169
+      },
+      "group": {
+        "label": "12 sessions / 4 route(s) / personalize=on",
+        "sessions": 12,
+        "addresses": 55,
+        "identicalNodes": 3,
+        "nodeIdentityFraction": 0.0545,
+        "identicalSubtreeNodes": 2,
+        "subtreeIdentityFraction": 0.0364,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2559,
+        "sharedBytes": 139,
+        "sharedByteFraction": 0.0543,
+        "divergent": [
+          "root/h0",
+          "root/h0/h0/k:dashboard",
+          "root/h0/h0/k:detail",
+          "root/h0/h0/k:settings",
+          "root/h0/h0/k:tasks",
+          "root/h1",
+          "root/h1/h0/k:amortize",
+          "root/h1/h0/k:audit",
+          "root/h1/h0/k:beta",
+          "root/h1/h0/k:digest",
+          "root/h1/h0/k:drain",
+          "root/h1/h0/k:fanout",
+          "root/h1/h0/k:patch",
+          "root/h1/h0/k:presence",
+          "root/h1/h0/k:queue",
+          "root/h1/h0/k:renders",
+          "root/h1/h0/k:sessions",
+          "root/h1/h0/k:shared-queries",
+          "root/h1/h1/k:act-1",
+          "root/h1/h1/k:act-2",
+          "root/h1/h1/k:act-3",
+          "root/h1/h1/k:act-4",
+          "root/h1/h1/k:act-5",
+          "root/h1/h1/k:act-6",
+          "root/h1/h1/k:act-7",
+          "root/h1/h1/k:act-8",
+          "root/h1/h2/k:task-01",
+          "root/h1/h2/k:task-02",
+          "root/h1/h2/k:task-03",
+          "root/h1/h2/k:task-04",
+          "root/h1/h2/k:task-05",
+          "root/h1/h2/k:task-06",
+          "root/h1/h2/k:task-07",
+          "root/h1/h2/k:task-08",
+          "root/h1/h2/k:task-09",
+          "root/h1/h2/k:task-10",
+          "root/h1/h2/k:task-11",
+          "root/h1/h2/k:task-12",
+          "root/h1/h2/k:task-13",
+          "root/h1/h2/k:task-14",
+          "root/h1/h2/k:task-15",
+          "root/h1/h2/k:task-16",
+          "root/h1/h2/k:task-17",
+          "root/h1/h2/k:task-18",
+          "root/h1/h4/k:doing",
+          "root/h1/h4/k:done",
+          "root/h1/h4/k:todo",
+          "root/h1/h6/k:task-04",
+          "root/h1/h6/k:task-07",
+          "root/h1/h6/k:task-10",
+          "root/h1/h6/k:task-13",
+          "root/h1/h6/k:task-16"
+        ]
+      }
+    },
+    {
+      "routes": 5,
+      "sessionsPerRoute": 2.4,
+      "personalized": true,
+      "population": {
+        "sessions": 12,
+        "distinctTrees": 12,
+        "sessionAmortization": 1,
+        "totalInstances": 230,
+        "distinctInstances": 76,
+        "instanceDedupFraction": 0.6696,
+        "totalBytes": 28347,
+        "distinctBytes": 10242,
+        "byteDedupFraction": 0.6387
+      },
+      "group": {
+        "label": "12 sessions / 5 route(s) / personalize=on",
+        "sessions": 12,
+        "addresses": 63,
+        "identicalNodes": 2,
+        "nodeIdentityFraction": 0.0317,
+        "identicalSubtreeNodes": 1,
+        "subtreeIdentityFraction": 0.0159,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2362,
+        "sharedBytes": 49,
+        "sharedByteFraction": 0.0207,
+        "divergent": [
+          "root/h0",
+          "root/h0/h0/k:dashboard",
+          "root/h0/h0/k:detail",
+          "root/h0/h0/k:profile",
+          "root/h0/h0/k:settings",
+          "root/h0/h0/k:tasks",
+          "root/h1",
+          "root/h1/h0/k:amortize",
+          "root/h1/h0/k:audit",
+          "root/h1/h0/k:beta",
+          "root/h1/h0/k:digest",
+          "root/h1/h0/k:drain",
+          "root/h1/h0/k:fanout",
+          "root/h1/h0/k:patch",
+          "root/h1/h0/k:presence",
+          "root/h1/h0/k:queue",
+          "root/h1/h0/k:renders",
+          "root/h1/h0/k:sessions",
+          "root/h1/h0/k:shared-queries",
+          "root/h1/h1/k:act-1",
+          "root/h1/h1/k:act-2",
+          "root/h1/h1/k:act-3",
+          "root/h1/h1/k:act-4",
+          "root/h1/h1/k:act-5",
+          "root/h1/h1/k:act-6",
+          "root/h1/h1/k:act-7",
+          "root/h1/h1/k:act-8",
+          "root/h1/h2/k:task-01",
+          "root/h1/h2/k:task-02",
+          "root/h1/h2/k:task-03",
+          "root/h1/h2/k:task-04",
+          "root/h1/h2/k:task-05",
+          "root/h1/h2/k:task-06",
+          "root/h1/h2/k:task-07",
+          "root/h1/h2/k:task-08",
+          "root/h1/h2/k:task-09",
+          "root/h1/h2/k:task-10",
+          "root/h1/h2/k:task-11",
+          "root/h1/h2/k:task-12",
+          "root/h1/h2/k:task-13",
+          "root/h1/h2/k:task-14",
+          "root/h1/h2/k:task-15",
+          "root/h1/h2/k:task-16",
+          "root/h1/h2/k:task-17",
+          "root/h1/h2/k:task-18",
+          "root/h1/h3/k:task-03",
+          "root/h1/h3/k:task-04",
+          "root/h1/h3/k:task-07",
+          "root/h1/h3/k:task-08",
+          "root/h1/h3/k:task-11",
+          "root/h1/h3/k:task-12",
+          "root/h1/h3/k:task-15",
+          "root/h1/h3/k:task-16",
+          "root/h1/h4/k:doing",
+          "root/h1/h4/k:done",
+          "root/h1/h4/k:todo",
+          "root/h1/h6/k:task-04",
+          "root/h1/h6/k:task-07",
+          "root/h1/h6/k:task-10",
+          "root/h1/h6/k:task-13",
+          "root/h1/h6/k:task-16"
+        ]
+      }
+    },
+    {
+      "routes": 1,
+      "sessionsPerRoute": 12,
+      "personalized": false,
+      "population": {
+        "sessions": 12,
+        "distinctTrees": 1,
+        "sessionAmortization": 12,
+        "totalInstances": 276,
+        "distinctInstances": 23,
+        "instanceDedupFraction": 0.9167,
+        "totalBytes": 30708,
+        "distinctBytes": 2559,
+        "byteDedupFraction": 0.9167
+      },
+      "group": {
+        "label": "12 sessions / 1 route(s) / personalize=off",
+        "sessions": 12,
+        "addresses": 23,
+        "identicalNodes": 23,
+        "nodeIdentityFraction": 1,
+        "identicalSubtreeNodes": 23,
+        "subtreeIdentityFraction": 1,
+        "wholeTreeIdentical": true,
+        "boundaries": [
+          {
+            "id": "root",
+            "depth": 0,
+            "instances": 23,
+            "bytes": 2559,
+            "events": 5
+          }
+        ],
+        "bytes": 2559,
+        "sharedBytes": 2559,
+        "sharedByteFraction": 1,
+        "divergent": []
+      }
+    },
+    {
+      "routes": 2,
+      "sessionsPerRoute": 6,
+      "personalized": false,
+      "population": {
+        "sessions": 12,
+        "distinctTrees": 2,
+        "sessionAmortization": 6,
+        "totalInstances": 300,
+        "distinctInstances": 44,
+        "instanceDedupFraction": 0.8533,
+        "totalBytes": 38286,
+        "distinctBytes": 5697,
+        "byteDedupFraction": 0.8512
+      },
+      "group": {
+        "label": "12 sessions / 2 route(s) / personalize=off",
+        "sessions": 12,
+        "addresses": 41,
+        "identicalNodes": 6,
+        "nodeIdentityFraction": 0.1463,
+        "identicalSubtreeNodes": 4,
+        "subtreeIdentityFraction": 0.0976,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 3191,
+        "sharedBytes": 319,
+        "sharedByteFraction": 0.1,
+        "divergent": [
+          "root/h0/h0/k:dashboard",
+          "root/h0/h0/k:tasks",
+          "root/h1",
+          "root/h1/h0/k:drain",
+          "root/h1/h0/k:fanout",
+          "root/h1/h0/k:patch",
+          "root/h1/h0/k:queue",
+          "root/h1/h0/k:renders",
+          "root/h1/h0/k:sessions",
+          "root/h1/h1/k:act-1",
+          "root/h1/h1/k:act-2",
+          "root/h1/h1/k:act-3",
+          "root/h1/h1/k:act-4",
+          "root/h1/h1/k:act-5",
+          "root/h1/h1/k:act-6",
+          "root/h1/h1/k:act-7",
+          "root/h1/h1/k:act-8",
+          "root/h1/h2/k:task-01",
+          "root/h1/h2/k:task-02",
+          "root/h1/h2/k:task-03",
+          "root/h1/h2/k:task-04",
+          "root/h1/h2/k:task-05",
+          "root/h1/h2/k:task-06",
+          "root/h1/h2/k:task-07",
+          "root/h1/h2/k:task-08",
+          "root/h1/h2/k:task-09",
+          "root/h1/h2/k:task-10",
+          "root/h1/h2/k:task-11",
+          "root/h1/h2/k:task-12",
+          "root/h1/h2/k:task-13",
+          "root/h1/h2/k:task-14",
+          "root/h1/h2/k:task-15",
+          "root/h1/h2/k:task-16",
+          "root/h1/h2/k:task-17",
+          "root/h1/h2/k:task-18"
+        ]
+      }
+    },
+    {
+      "routes": 3,
+      "sessionsPerRoute": 4,
+      "personalized": false,
+      "population": {
+        "sessions": 12,
+        "distinctTrees": 3,
+        "sessionAmortization": 4,
+        "totalInstances": 268,
+        "distinctInstances": 54,
+        "instanceDedupFraction": 0.7985,
+        "totalBytes": 34132,
+        "distinctBytes": 7073,
+        "byteDedupFraction": 0.7928
+      },
+      "group": {
+        "label": "12 sessions / 3 route(s) / personalize=off",
+        "sessions": 12,
+        "addresses": 49,
+        "identicalNodes": 5,
+        "nodeIdentityFraction": 0.102,
+        "identicalSubtreeNodes": 3,
+        "subtreeIdentityFraction": 0.0612,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2844,
+        "sharedBytes": 231,
+        "sharedByteFraction": 0.0812,
+        "divergent": [
+          "root/h0/h0/k:dashboard",
+          "root/h0/h0/k:detail",
+          "root/h0/h0/k:tasks",
+          "root/h1",
+          "root/h1/h0/k:drain",
+          "root/h1/h0/k:fanout",
+          "root/h1/h0/k:patch",
+          "root/h1/h0/k:queue",
+          "root/h1/h0/k:renders",
+          "root/h1/h0/k:sessions",
+          "root/h1/h1/k:act-1",
+          "root/h1/h1/k:act-2",
+          "root/h1/h1/k:act-3",
+          "root/h1/h1/k:act-4",
+          "root/h1/h1/k:act-5",
+          "root/h1/h1/k:act-6",
+          "root/h1/h1/k:act-7",
+          "root/h1/h1/k:act-8",
+          "root/h1/h2/k:task-01",
+          "root/h1/h2/k:task-02",
+          "root/h1/h2/k:task-03",
+          "root/h1/h2/k:task-04",
+          "root/h1/h2/k:task-05",
+          "root/h1/h2/k:task-06",
+          "root/h1/h2/k:task-07",
+          "root/h1/h2/k:task-08",
+          "root/h1/h2/k:task-09",
+          "root/h1/h2/k:task-10",
+          "root/h1/h2/k:task-11",
+          "root/h1/h2/k:task-12",
+          "root/h1/h2/k:task-13",
+          "root/h1/h2/k:task-14",
+          "root/h1/h2/k:task-15",
+          "root/h1/h2/k:task-16",
+          "root/h1/h2/k:task-17",
+          "root/h1/h2/k:task-18",
+          "root/h1/h4/k:doing",
+          "root/h1/h4/k:done",
+          "root/h1/h4/k:todo",
+          "root/h1/h6/k:task-04",
+          "root/h1/h6/k:task-07",
+          "root/h1/h6/k:task-10",
+          "root/h1/h6/k:task-13",
+          "root/h1/h6/k:task-16"
+        ]
+      }
+    },
+    {
+      "routes": 4,
+      "sessionsPerRoute": 3,
+      "personalized": false,
+      "population": {
+        "sessions": 12,
+        "distinctTrees": 4,
+        "sessionAmortization": 3,
+        "totalInstances": 246,
+        "distinctInstances": 62,
+        "instanceDedupFraction": 0.748,
+        "totalBytes": 30759,
+        "distinctBytes": 8021,
+        "byteDedupFraction": 0.7392
+      },
+      "group": {
+        "label": "12 sessions / 4 route(s) / personalize=off",
+        "sessions": 12,
+        "addresses": 55,
+        "identicalNodes": 4,
+        "nodeIdentityFraction": 0.0727,
+        "identicalSubtreeNodes": 2,
+        "subtreeIdentityFraction": 0.0364,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2563,
+        "sharedBytes": 139,
+        "sharedByteFraction": 0.0542,
+        "divergent": [
+          "root/h0/h0/k:dashboard",
+          "root/h0/h0/k:detail",
+          "root/h0/h0/k:settings",
+          "root/h0/h0/k:tasks",
+          "root/h1",
+          "root/h1/h0/k:amortize",
+          "root/h1/h0/k:audit",
+          "root/h1/h0/k:beta",
+          "root/h1/h0/k:digest",
+          "root/h1/h0/k:drain",
+          "root/h1/h0/k:fanout",
+          "root/h1/h0/k:patch",
+          "root/h1/h0/k:presence",
+          "root/h1/h0/k:queue",
+          "root/h1/h0/k:renders",
+          "root/h1/h0/k:sessions",
+          "root/h1/h0/k:shared-queries",
+          "root/h1/h1/k:act-1",
+          "root/h1/h1/k:act-2",
+          "root/h1/h1/k:act-3",
+          "root/h1/h1/k:act-4",
+          "root/h1/h1/k:act-5",
+          "root/h1/h1/k:act-6",
+          "root/h1/h1/k:act-7",
+          "root/h1/h1/k:act-8",
+          "root/h1/h2/k:task-01",
+          "root/h1/h2/k:task-02",
+          "root/h1/h2/k:task-03",
+          "root/h1/h2/k:task-04",
+          "root/h1/h2/k:task-05",
+          "root/h1/h2/k:task-06",
+          "root/h1/h2/k:task-07",
+          "root/h1/h2/k:task-08",
+          "root/h1/h2/k:task-09",
+          "root/h1/h2/k:task-10",
+          "root/h1/h2/k:task-11",
+          "root/h1/h2/k:task-12",
+          "root/h1/h2/k:task-13",
+          "root/h1/h2/k:task-14",
+          "root/h1/h2/k:task-15",
+          "root/h1/h2/k:task-16",
+          "root/h1/h2/k:task-17",
+          "root/h1/h2/k:task-18",
+          "root/h1/h4/k:doing",
+          "root/h1/h4/k:done",
+          "root/h1/h4/k:todo",
+          "root/h1/h6/k:task-04",
+          "root/h1/h6/k:task-07",
+          "root/h1/h6/k:task-10",
+          "root/h1/h6/k:task-13",
+          "root/h1/h6/k:task-16"
+        ]
+      }
+    },
+    {
+      "routes": 5,
+      "sessionsPerRoute": 2.4,
+      "personalized": false,
+      "population": {
+        "sessions": 12,
+        "distinctTrees": 6,
+        "sessionAmortization": 2,
+        "totalInstances": 230,
+        "distinctInstances": 73,
+        "instanceDedupFraction": 0.6826,
+        "totalBytes": 28404,
+        "distinctBytes": 9571,
+        "byteDedupFraction": 0.663
+      },
+      "group": {
+        "label": "12 sessions / 5 route(s) / personalize=off",
+        "sessions": 12,
+        "addresses": 63,
+        "identicalNodes": 3,
+        "nodeIdentityFraction": 0.0476,
+        "identicalSubtreeNodes": 1,
+        "subtreeIdentityFraction": 0.0159,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2367,
+        "sharedBytes": 49,
+        "sharedByteFraction": 0.0207,
+        "divergent": [
+          "root/h0/h0/k:dashboard",
+          "root/h0/h0/k:detail",
+          "root/h0/h0/k:profile",
+          "root/h0/h0/k:settings",
+          "root/h0/h0/k:tasks",
+          "root/h1",
+          "root/h1/h0/k:amortize",
+          "root/h1/h0/k:audit",
+          "root/h1/h0/k:beta",
+          "root/h1/h0/k:digest",
+          "root/h1/h0/k:drain",
+          "root/h1/h0/k:fanout",
+          "root/h1/h0/k:patch",
+          "root/h1/h0/k:presence",
+          "root/h1/h0/k:queue",
+          "root/h1/h0/k:renders",
+          "root/h1/h0/k:sessions",
+          "root/h1/h0/k:shared-queries",
+          "root/h1/h1/k:act-1",
+          "root/h1/h1/k:act-2",
+          "root/h1/h1/k:act-3",
+          "root/h1/h1/k:act-4",
+          "root/h1/h1/k:act-5",
+          "root/h1/h1/k:act-6",
+          "root/h1/h1/k:act-7",
+          "root/h1/h1/k:act-8",
+          "root/h1/h2/k:task-01",
+          "root/h1/h2/k:task-02",
+          "root/h1/h2/k:task-03",
+          "root/h1/h2/k:task-04",
+          "root/h1/h2/k:task-05",
+          "root/h1/h2/k:task-06",
+          "root/h1/h2/k:task-07",
+          "root/h1/h2/k:task-08",
+          "root/h1/h2/k:task-09",
+          "root/h1/h2/k:task-10",
+          "root/h1/h2/k:task-11",
+          "root/h1/h2/k:task-12",
+          "root/h1/h2/k:task-13",
+          "root/h1/h2/k:task-14",
+          "root/h1/h2/k:task-15",
+          "root/h1/h2/k:task-16",
+          "root/h1/h2/k:task-17",
+          "root/h1/h2/k:task-18",
+          "root/h1/h3/k:task-03",
+          "root/h1/h3/k:task-04",
+          "root/h1/h3/k:task-07",
+          "root/h1/h3/k:task-08",
+          "root/h1/h3/k:task-11",
+          "root/h1/h3/k:task-12",
+          "root/h1/h3/k:task-15",
+          "root/h1/h3/k:task-16",
+          "root/h1/h4/k:doing",
+          "root/h1/h4/k:done",
+          "root/h1/h4/k:todo",
+          "root/h1/h6/k:task-04",
+          "root/h1/h6/k:task-07",
+          "root/h1/h6/k:task-10",
+          "root/h1/h6/k:task-13",
+          "root/h1/h6/k:task-16"
+        ]
+      }
+    }
+  ],
+  "routeGroups": [
+    {
+      "route": "dashboard",
+      "sessions": 4,
+      "personalized": true,
+      "group": {
+        "label": "4 on dashboard / personalize=on",
+        "sessions": 4,
+        "addresses": 23,
+        "identicalNodes": 22,
+        "nodeIdentityFraction": 0.9565,
+        "identicalSubtreeNodes": 21,
+        "subtreeIdentityFraction": 0.913,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h1",
+            "depth": 1,
+            "instances": 15,
+            "bytes": 1696,
+            "events": 0
+          },
+          {
+            "id": "root/h0/h0/k:dashboard",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 93,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:tasks",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 86,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2554,
+        "sharedBytes": 2194,
+        "sharedByteFraction": 0.859,
+        "divergent": [
+          "root/h0"
+        ]
+      },
+      "population": {
+        "sessions": 4,
+        "distinctTrees": 4,
+        "sessionAmortization": 1,
+        "totalInstances": 92,
+        "distinctInstances": 26,
+        "instanceDedupFraction": 0.7174,
+        "totalBytes": 10217,
+        "distinctBytes": 3230,
+        "byteDedupFraction": 0.6839
+      }
+    },
+    {
+      "route": "dashboard",
+      "sessions": 4,
+      "personalized": false,
+      "group": {
+        "label": "4 on dashboard / personalize=off",
+        "sessions": 4,
+        "addresses": 23,
+        "identicalNodes": 23,
+        "nodeIdentityFraction": 1,
+        "identicalSubtreeNodes": 23,
+        "subtreeIdentityFraction": 1,
+        "wholeTreeIdentical": true,
+        "boundaries": [
+          {
+            "id": "root",
+            "depth": 0,
+            "instances": 23,
+            "bytes": 2559,
+            "events": 5
+          }
+        ],
+        "bytes": 2559,
+        "sharedBytes": 2559,
+        "sharedByteFraction": 1,
+        "divergent": []
+      },
+      "population": {
+        "sessions": 4,
+        "distinctTrees": 1,
+        "sessionAmortization": 4,
+        "totalInstances": 92,
+        "distinctInstances": 23,
+        "instanceDedupFraction": 0.75,
+        "totalBytes": 10236,
+        "distinctBytes": 2559,
+        "byteDedupFraction": 0.75
+      }
+    },
+    {
+      "route": "tasks",
+      "sessions": 4,
+      "personalized": true,
+      "group": {
+        "label": "4 on tasks / personalize=on",
+        "sessions": 4,
+        "addresses": 27,
+        "identicalNodes": 26,
+        "nodeIdentityFraction": 0.963,
+        "identicalSubtreeNodes": 25,
+        "subtreeIdentityFraction": 0.9259,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h1",
+            "depth": 1,
+            "instances": 19,
+            "bytes": 2959,
+            "events": 18
+          },
+          {
+            "id": "root/h0/h0/k:dashboard",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 94,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:tasks",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 85,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 3817,
+        "sharedBytes": 3457,
+        "sharedByteFraction": 0.9057,
+        "divergent": [
+          "root/h0"
+        ]
+      },
+      "population": {
+        "sessions": 4,
+        "distinctTrees": 4,
+        "sessionAmortization": 1,
+        "totalInstances": 108,
+        "distinctInstances": 30,
+        "instanceDedupFraction": 0.7222,
+        "totalBytes": 15269,
+        "distinctBytes": 4493,
+        "byteDedupFraction": 0.7057
+      }
+    },
+    {
+      "route": "tasks",
+      "sessions": 4,
+      "personalized": false,
+      "group": {
+        "label": "4 on tasks / personalize=off",
+        "sessions": 4,
+        "addresses": 27,
+        "identicalNodes": 27,
+        "nodeIdentityFraction": 1,
+        "identicalSubtreeNodes": 27,
+        "subtreeIdentityFraction": 1,
+        "wholeTreeIdentical": true,
+        "boundaries": [
+          {
+            "id": "root",
+            "depth": 0,
+            "instances": 27,
+            "bytes": 3822,
+            "events": 23
+          }
+        ],
+        "bytes": 3822,
+        "sharedBytes": 3822,
+        "sharedByteFraction": 1,
+        "divergent": []
+      },
+      "population": {
+        "sessions": 4,
+        "distinctTrees": 1,
+        "sessionAmortization": 4,
+        "totalInstances": 108,
+        "distinctInstances": 27,
+        "instanceDedupFraction": 0.75,
+        "totalBytes": 15288,
+        "distinctBytes": 3822,
+        "byteDedupFraction": 0.75
+      }
+    },
+    {
+      "route": "detail",
+      "sessions": 4,
+      "personalized": true,
+      "group": {
+        "label": "4 on detail / personalize=on",
+        "sessions": 4,
+        "addresses": 17,
+        "identicalNodes": 16,
+        "nodeIdentityFraction": 0.9412,
+        "identicalSubtreeNodes": 15,
+        "subtreeIdentityFraction": 0.8824,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h1",
+            "depth": 1,
+            "instances": 9,
+            "bytes": 1289,
+            "events": 8
+          },
+          {
+            "id": "root/h0/h0/k:dashboard",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 94,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 87,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:tasks",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 86,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2147,
+        "sharedBytes": 1787,
+        "sharedByteFraction": 0.8323,
+        "divergent": [
+          "root/h0"
+        ]
+      },
+      "population": {
+        "sessions": 4,
+        "distinctTrees": 4,
+        "sessionAmortization": 1,
+        "totalInstances": 68,
+        "distinctInstances": 20,
+        "instanceDedupFraction": 0.7059,
+        "totalBytes": 8589,
+        "distinctBytes": 2823,
+        "byteDedupFraction": 0.6713
+      }
+    },
+    {
+      "route": "detail",
+      "sessions": 4,
+      "personalized": false,
+      "group": {
+        "label": "4 on detail / personalize=off",
+        "sessions": 4,
+        "addresses": 17,
+        "identicalNodes": 17,
+        "nodeIdentityFraction": 1,
+        "identicalSubtreeNodes": 17,
+        "subtreeIdentityFraction": 1,
+        "wholeTreeIdentical": true,
+        "boundaries": [
+          {
+            "id": "root",
+            "depth": 0,
+            "instances": 17,
+            "bytes": 2152,
+            "events": 13
+          }
+        ],
+        "bytes": 2152,
+        "sharedBytes": 2152,
+        "sharedByteFraction": 1,
+        "divergent": []
+      },
+      "population": {
+        "sessions": 4,
+        "distinctTrees": 1,
+        "sessionAmortization": 4,
+        "totalInstances": 68,
+        "distinctInstances": 17,
+        "instanceDedupFraction": 0.75,
+        "totalBytes": 8608,
+        "distinctBytes": 2152,
+        "byteDedupFraction": 0.75
+      }
+    },
+    {
+      "route": "settings",
+      "sessions": 4,
+      "personalized": true,
+      "group": {
+        "label": "4 on settings / personalize=on",
+        "sessions": 4,
+        "addresses": 15,
+        "identicalNodes": 14,
+        "nodeIdentityFraction": 0.9333,
+        "identicalSubtreeNodes": 13,
+        "subtreeIdentityFraction": 0.8667,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h1",
+            "depth": 1,
+            "instances": 7,
+            "bytes": 857,
+            "events": 6
+          },
+          {
+            "id": "root/h0/h0/k:dashboard",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 94,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 91,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:tasks",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 86,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 1715,
+        "sharedBytes": 1355,
+        "sharedByteFraction": 0.7901,
+        "divergent": [
+          "root/h0"
+        ]
+      },
+      "population": {
+        "sessions": 4,
+        "distinctTrees": 4,
+        "sessionAmortization": 1,
+        "totalInstances": 60,
+        "distinctInstances": 18,
+        "instanceDedupFraction": 0.7,
+        "totalBytes": 6861,
+        "distinctBytes": 2391,
+        "byteDedupFraction": 0.6515
+      }
+    },
+    {
+      "route": "settings",
+      "sessions": 4,
+      "personalized": false,
+      "group": {
+        "label": "4 on settings / personalize=off",
+        "sessions": 4,
+        "addresses": 15,
+        "identicalNodes": 15,
+        "nodeIdentityFraction": 1,
+        "identicalSubtreeNodes": 15,
+        "subtreeIdentityFraction": 1,
+        "wholeTreeIdentical": true,
+        "boundaries": [
+          {
+            "id": "root",
+            "depth": 0,
+            "instances": 15,
+            "bytes": 1720,
+            "events": 11
+          }
+        ],
+        "bytes": 1720,
+        "sharedBytes": 1720,
+        "sharedByteFraction": 1,
+        "divergent": []
+      },
+      "population": {
+        "sessions": 4,
+        "distinctTrees": 1,
+        "sessionAmortization": 4,
+        "totalInstances": 60,
+        "distinctInstances": 15,
+        "instanceDedupFraction": 0.75,
+        "totalBytes": 6880,
+        "distinctBytes": 1720,
+        "byteDedupFraction": 0.75
+      }
+    },
+    {
+      "route": "profile",
+      "sessions": 4,
+      "personalized": true,
+      "group": {
+        "label": "4 on profile / personalize=on",
+        "sessions": 4,
+        "addresses": 27,
+        "identicalNodes": 7,
+        "nodeIdentityFraction": 0.2593,
+        "identicalSubtreeNodes": 6,
+        "subtreeIdentityFraction": 0.2222,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h0/h0/k:dashboard",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 94,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 89,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:tasks",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 86,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 1665,
+        "sharedBytes": 498,
+        "sharedByteFraction": 0.2991,
+        "divergent": [
+          "root/h0",
+          "root/h1",
+          "root/h1/h3/k:task-01",
+          "root/h1/h3/k:task-02",
+          "root/h1/h3/k:task-03",
+          "root/h1/h3/k:task-04",
+          "root/h1/h3/k:task-05",
+          "root/h1/h3/k:task-06",
+          "root/h1/h3/k:task-07",
+          "root/h1/h3/k:task-08",
+          "root/h1/h3/k:task-09",
+          "root/h1/h3/k:task-10",
+          "root/h1/h3/k:task-11",
+          "root/h1/h3/k:task-12",
+          "root/h1/h3/k:task-13",
+          "root/h1/h3/k:task-14",
+          "root/h1/h3/k:task-15",
+          "root/h1/h3/k:task-16",
+          "root/h1/h3/k:task-17",
+          "root/h1/h3/k:task-18"
+        ]
+      },
+      "population": {
+        "sessions": 4,
+        "distinctTrees": 4,
+        "sessionAmortization": 1,
+        "totalInstances": 54,
+        "distinctInstances": 33,
+        "instanceDedupFraction": 0.3889,
+        "totalBytes": 6660,
+        "distinctBytes": 4761,
+        "byteDedupFraction": 0.2851
+      }
+    },
+    {
+      "route": "profile",
+      "sessions": 4,
+      "personalized": false,
+      "group": {
+        "label": "4 on profile / personalize=off",
+        "sessions": 4,
+        "addresses": 27,
+        "identicalNodes": 8,
+        "nodeIdentityFraction": 0.2963,
+        "identicalSubtreeNodes": 7,
+        "subtreeIdentityFraction": 0.2593,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h0",
+            "depth": 1,
+            "instances": 6,
+            "bytes": 679,
+            "events": 5
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 1670,
+        "sharedBytes": 728,
+        "sharedByteFraction": 0.4359,
+        "divergent": [
+          "root/h1",
+          "root/h1/h3/k:task-01",
+          "root/h1/h3/k:task-02",
+          "root/h1/h3/k:task-03",
+          "root/h1/h3/k:task-04",
+          "root/h1/h3/k:task-05",
+          "root/h1/h3/k:task-06",
+          "root/h1/h3/k:task-07",
+          "root/h1/h3/k:task-08",
+          "root/h1/h3/k:task-09",
+          "root/h1/h3/k:task-10",
+          "root/h1/h3/k:task-11",
+          "root/h1/h3/k:task-12",
+          "root/h1/h3/k:task-13",
+          "root/h1/h3/k:task-14",
+          "root/h1/h3/k:task-15",
+          "root/h1/h3/k:task-16",
+          "root/h1/h3/k:task-17",
+          "root/h1/h3/k:task-18"
+        ]
+      },
+      "population": {
+        "sessions": 4,
+        "distinctTrees": 4,
+        "sessionAmortization": 1,
+        "totalInstances": 54,
+        "distinctInstances": 30,
+        "instanceDedupFraction": 0.4444,
+        "totalBytes": 6679,
+        "distinctBytes": 4090,
+        "byteDedupFraction": 0.3876
+      }
+    }
+  ],
+  "scale": [
+    {
+      "route": "dashboard",
+      "sessions": 2,
+      "personalized": true,
+      "group": {
+        "label": "2 on dashboard / distinct names / personalize=on",
+        "sessions": 2,
+        "addresses": 23,
+        "identicalNodes": 22,
+        "nodeIdentityFraction": 0.9565,
+        "identicalSubtreeNodes": 21,
+        "subtreeIdentityFraction": 0.913,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h1",
+            "depth": 1,
+            "instances": 15,
+            "bytes": 1696,
+            "events": 0
+          },
+          {
+            "id": "root/h0/h0/k:dashboard",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 93,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:tasks",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 86,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2558,
+        "sharedBytes": 2194,
+        "sharedByteFraction": 0.8577,
+        "divergent": [
+          "root/h0"
+        ]
+      },
+      "population": {
+        "sessions": 2,
+        "distinctTrees": 2,
+        "sessionAmortization": 1,
+        "totalInstances": 46,
+        "distinctInstances": 24,
+        "instanceDedupFraction": 0.4783,
+        "totalBytes": 5116,
+        "distinctBytes": 2787,
+        "byteDedupFraction": 0.4552
+      }
+    },
+    {
+      "route": "dashboard",
+      "sessions": 4,
+      "personalized": true,
+      "group": {
+        "label": "4 on dashboard / distinct names / personalize=on",
+        "sessions": 4,
+        "addresses": 23,
+        "identicalNodes": 22,
+        "nodeIdentityFraction": 0.9565,
+        "identicalSubtreeNodes": 21,
+        "subtreeIdentityFraction": 0.913,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h1",
+            "depth": 1,
+            "instances": 15,
+            "bytes": 1696,
+            "events": 0
+          },
+          {
+            "id": "root/h0/h0/k:dashboard",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 93,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:tasks",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 86,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2558,
+        "sharedBytes": 2194,
+        "sharedByteFraction": 0.8577,
+        "divergent": [
+          "root/h0"
+        ]
+      },
+      "population": {
+        "sessions": 4,
+        "distinctTrees": 4,
+        "sessionAmortization": 1,
+        "totalInstances": 92,
+        "distinctInstances": 26,
+        "instanceDedupFraction": 0.7174,
+        "totalBytes": 10232,
+        "distinctBytes": 3245,
+        "byteDedupFraction": 0.6829
+      }
+    },
+    {
+      "route": "dashboard",
+      "sessions": 8,
+      "personalized": true,
+      "group": {
+        "label": "8 on dashboard / distinct names / personalize=on",
+        "sessions": 8,
+        "addresses": 23,
+        "identicalNodes": 22,
+        "nodeIdentityFraction": 0.9565,
+        "identicalSubtreeNodes": 21,
+        "subtreeIdentityFraction": 0.913,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h1",
+            "depth": 1,
+            "instances": 15,
+            "bytes": 1696,
+            "events": 0
+          },
+          {
+            "id": "root/h0/h0/k:dashboard",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 93,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:tasks",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 86,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2558,
+        "sharedBytes": 2194,
+        "sharedByteFraction": 0.8577,
+        "divergent": [
+          "root/h0"
+        ]
+      },
+      "population": {
+        "sessions": 8,
+        "distinctTrees": 8,
+        "sessionAmortization": 1,
+        "totalInstances": 184,
+        "distinctInstances": 30,
+        "instanceDedupFraction": 0.837,
+        "totalBytes": 20464,
+        "distinctBytes": 4161,
+        "byteDedupFraction": 0.7967
+      }
+    },
+    {
+      "route": "dashboard",
+      "sessions": 16,
+      "personalized": true,
+      "group": {
+        "label": "16 on dashboard / distinct names / personalize=on",
+        "sessions": 16,
+        "addresses": 23,
+        "identicalNodes": 22,
+        "nodeIdentityFraction": 0.9565,
+        "identicalSubtreeNodes": 21,
+        "subtreeIdentityFraction": 0.913,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h1",
+            "depth": 1,
+            "instances": 15,
+            "bytes": 1696,
+            "events": 0
+          },
+          {
+            "id": "root/h0/h0/k:dashboard",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 93,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:tasks",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 86,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2558,
+        "sharedBytes": 2194,
+        "sharedByteFraction": 0.8577,
+        "divergent": [
+          "root/h0"
+        ]
+      },
+      "population": {
+        "sessions": 16,
+        "distinctTrees": 16,
+        "sessionAmortization": 1,
+        "totalInstances": 368,
+        "distinctInstances": 38,
+        "instanceDedupFraction": 0.8967,
+        "totalBytes": 40928,
+        "distinctBytes": 5993,
+        "byteDedupFraction": 0.8536
+      }
+    },
+    {
+      "route": "dashboard",
+      "sessions": 2,
+      "personalized": false,
+      "group": {
+        "label": "2 on dashboard / distinct names / personalize=off",
+        "sessions": 2,
+        "addresses": 23,
+        "identicalNodes": 23,
+        "nodeIdentityFraction": 1,
+        "identicalSubtreeNodes": 23,
+        "subtreeIdentityFraction": 1,
+        "wholeTreeIdentical": true,
+        "boundaries": [
+          {
+            "id": "root",
+            "depth": 0,
+            "instances": 23,
+            "bytes": 2559,
+            "events": 5
+          }
+        ],
+        "bytes": 2559,
+        "sharedBytes": 2559,
+        "sharedByteFraction": 1,
+        "divergent": []
+      },
+      "population": {
+        "sessions": 2,
+        "distinctTrees": 1,
+        "sessionAmortization": 2,
+        "totalInstances": 46,
+        "distinctInstances": 23,
+        "instanceDedupFraction": 0.5,
+        "totalBytes": 5118,
+        "distinctBytes": 2559,
+        "byteDedupFraction": 0.5
+      }
+    },
+    {
+      "route": "dashboard",
+      "sessions": 4,
+      "personalized": false,
+      "group": {
+        "label": "4 on dashboard / distinct names / personalize=off",
+        "sessions": 4,
+        "addresses": 23,
+        "identicalNodes": 23,
+        "nodeIdentityFraction": 1,
+        "identicalSubtreeNodes": 23,
+        "subtreeIdentityFraction": 1,
+        "wholeTreeIdentical": true,
+        "boundaries": [
+          {
+            "id": "root",
+            "depth": 0,
+            "instances": 23,
+            "bytes": 2559,
+            "events": 5
+          }
+        ],
+        "bytes": 2559,
+        "sharedBytes": 2559,
+        "sharedByteFraction": 1,
+        "divergent": []
+      },
+      "population": {
+        "sessions": 4,
+        "distinctTrees": 1,
+        "sessionAmortization": 4,
+        "totalInstances": 92,
+        "distinctInstances": 23,
+        "instanceDedupFraction": 0.75,
+        "totalBytes": 10236,
+        "distinctBytes": 2559,
+        "byteDedupFraction": 0.75
+      }
+    },
+    {
+      "route": "dashboard",
+      "sessions": 8,
+      "personalized": false,
+      "group": {
+        "label": "8 on dashboard / distinct names / personalize=off",
+        "sessions": 8,
+        "addresses": 23,
+        "identicalNodes": 23,
+        "nodeIdentityFraction": 1,
+        "identicalSubtreeNodes": 23,
+        "subtreeIdentityFraction": 1,
+        "wholeTreeIdentical": true,
+        "boundaries": [
+          {
+            "id": "root",
+            "depth": 0,
+            "instances": 23,
+            "bytes": 2559,
+            "events": 5
+          }
+        ],
+        "bytes": 2559,
+        "sharedBytes": 2559,
+        "sharedByteFraction": 1,
+        "divergent": []
+      },
+      "population": {
+        "sessions": 8,
+        "distinctTrees": 1,
+        "sessionAmortization": 8,
+        "totalInstances": 184,
+        "distinctInstances": 23,
+        "instanceDedupFraction": 0.875,
+        "totalBytes": 20472,
+        "distinctBytes": 2559,
+        "byteDedupFraction": 0.875
+      }
+    },
+    {
+      "route": "dashboard",
+      "sessions": 16,
+      "personalized": false,
+      "group": {
+        "label": "16 on dashboard / distinct names / personalize=off",
+        "sessions": 16,
+        "addresses": 23,
+        "identicalNodes": 23,
+        "nodeIdentityFraction": 1,
+        "identicalSubtreeNodes": 23,
+        "subtreeIdentityFraction": 1,
+        "wholeTreeIdentical": true,
+        "boundaries": [
+          {
+            "id": "root",
+            "depth": 0,
+            "instances": 23,
+            "bytes": 2559,
+            "events": 5
+          }
+        ],
+        "bytes": 2559,
+        "sharedBytes": 2559,
+        "sharedByteFraction": 1,
+        "divergent": []
+      },
+      "population": {
+        "sessions": 16,
+        "distinctTrees": 1,
+        "sessionAmortization": 16,
+        "totalInstances": 368,
+        "distinctInstances": 23,
+        "instanceDedupFraction": 0.9375,
+        "totalBytes": 40944,
+        "distinctBytes": 2559,
+        "byteDedupFraction": 0.9375
+      }
+    }
+  ],
+  "navigation": [
+    {
+      "shell": "fused",
+      "connectTemplates": 7,
+      "connectTemplateBytes": 1033,
+      "connectSnapshotBytes": 2595,
+      "steps": [
+        {
+          "from": "dashboard",
+          "to": "tasks",
+          "visit": "first",
+          "templates": 2,
+          "operations": 3,
+          "ops": [
+            "set:root/h0/h0/k:dashboard",
+            "set:root/h0/h0/k:tasks",
+            "set:root"
+          ],
+          "rootReplace": false,
+          "bytes": 3672
+        },
+        {
+          "from": "tasks",
+          "to": "detail",
+          "visit": "first",
+          "templates": 2,
+          "operations": 3,
+          "ops": [
+            "set:root/h0/h0/k:tasks",
+            "set:root/h0/h0/k:detail",
+            "set:root"
+          ],
+          "rootReplace": false,
+          "bytes": 1934
+        },
+        {
+          "from": "detail",
+          "to": "settings",
+          "visit": "first",
+          "templates": 2,
+          "operations": 3,
+          "ops": [
+            "set:root/h0/h0/k:detail",
+            "set:root/h0/h0/k:settings",
+            "set:root"
+          ],
+          "rootReplace": false,
+          "bytes": 1427
+        },
+        {
+          "from": "settings",
+          "to": "profile",
+          "visit": "first",
+          "templates": 1,
+          "operations": 3,
+          "ops": [
+            "set:root/h0/h0/k:settings",
+            "set:root/h0/h0/k:profile",
+            "set:root"
+          ],
+          "rootReplace": false,
+          "bytes": 1366
+        },
+        {
+          "from": "profile",
+          "to": "dashboard",
+          "visit": "repeat",
+          "templates": 0,
+          "operations": 3,
+          "ops": [
+            "set:root/h0/h0/k:dashboard",
+            "set:root/h0/h0/k:profile",
+            "set:root"
+          ],
+          "rootReplace": false,
+          "bytes": 1987
+        },
+        {
+          "from": "dashboard",
+          "to": "tasks",
+          "visit": "repeat",
+          "templates": 0,
+          "operations": 3,
+          "ops": [
+            "set:root/h0/h0/k:dashboard",
+            "set:root/h0/h0/k:tasks",
+            "set:root"
+          ],
+          "rootReplace": false,
+          "bytes": 3248
+        },
+        {
+          "from": "tasks",
+          "to": "profile",
+          "visit": "repeat",
+          "templates": 0,
+          "operations": 3,
+          "ops": [
+            "set:root/h0/h0/k:tasks",
+            "set:root/h0/h0/k:profile",
+            "set:root"
+          ],
+          "rootReplace": false,
+          "bytes": 1174
+        }
+      ],
+      "firstVisitBytes": 8399,
+      "repeatVisitBytes": 6409,
+      "templatesAfterTour": 14
+    },
+    {
+      "shell": "split",
+      "connectTemplates": 7,
+      "connectTemplateBytes": 1059,
+      "connectSnapshotBytes": 2596,
+      "steps": [
+        {
+          "from": "dashboard",
+          "to": "tasks",
+          "visit": "first",
+          "templates": 3,
+          "operations": 1,
+          "ops": [
+            "replace:root"
+          ],
+          "rootReplace": true,
+          "bytes": 4482
+        },
+        {
+          "from": "tasks",
+          "to": "detail",
+          "visit": "first",
+          "templates": 3,
+          "operations": 1,
+          "ops": [
+            "replace:root"
+          ],
+          "rootReplace": true,
+          "bytes": 2748
+        },
+        {
+          "from": "detail",
+          "to": "settings",
+          "visit": "first",
+          "templates": 3,
+          "operations": 1,
+          "ops": [
+            "replace:root"
+          ],
+          "rootReplace": true,
+          "bytes": 2240
+        },
+        {
+          "from": "settings",
+          "to": "profile",
+          "visit": "first",
+          "templates": 2,
+          "operations": 1,
+          "ops": [
+            "replace:root"
+          ],
+          "rootReplace": true,
+          "bytes": 2177
+        },
+        {
+          "from": "profile",
+          "to": "dashboard",
+          "visit": "repeat",
+          "templates": 0,
+          "operations": 1,
+          "ops": [
+            "replace:root"
+          ],
+          "rootReplace": true,
+          "bytes": 2665
+        },
+        {
+          "from": "dashboard",
+          "to": "tasks",
+          "visit": "repeat",
+          "templates": 0,
+          "operations": 1,
+          "ops": [
+            "replace:root"
+          ],
+          "rootReplace": true,
+          "bytes": 3928
+        },
+        {
+          "from": "tasks",
+          "to": "profile",
+          "visit": "repeat",
+          "templates": 0,
+          "operations": 1,
+          "ops": [
+            "replace:root"
+          ],
+          "rootReplace": true,
+          "bytes": 1856
+        }
+      ],
+      "firstVisitBytes": 11647,
+      "repeatVisitBytes": 8449,
+      "templatesAfterTour": 18
+    }
+  ],
+  "boundaries": [
+    {
+      "label": "4 sessions on dashboard, distinct users, personalized",
+      "group": {
+        "label": "4 sessions on dashboard, distinct users, personalized",
+        "sessions": 4,
+        "addresses": 23,
+        "identicalNodes": 22,
+        "nodeIdentityFraction": 0.9565,
+        "identicalSubtreeNodes": 21,
+        "subtreeIdentityFraction": 0.913,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h1",
+            "depth": 1,
+            "instances": 15,
+            "bytes": 1696,
+            "events": 0
+          },
+          {
+            "id": "root/h0/h0/k:dashboard",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 93,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:tasks",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 86,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2554,
+        "sharedBytes": 2194,
+        "sharedByteFraction": 0.859,
+        "divergent": [
+          "root/h0"
+        ]
+      }
+    },
+    {
+      "label": "4 sessions on dashboard, distinct users, not personalized",
+      "group": {
+        "label": "4 sessions on dashboard, distinct users, not personalized",
+        "sessions": 4,
+        "addresses": 23,
+        "identicalNodes": 23,
+        "nodeIdentityFraction": 1,
+        "identicalSubtreeNodes": 23,
+        "subtreeIdentityFraction": 1,
+        "wholeTreeIdentical": true,
+        "boundaries": [
+          {
+            "id": "root",
+            "depth": 0,
+            "instances": 23,
+            "bytes": 2559,
+            "events": 5
+          }
+        ],
+        "bytes": 2559,
+        "sharedBytes": 2559,
+        "sharedByteFraction": 1,
+        "divergent": []
+      }
+    },
+    {
+      "label": "4 sessions on tasks, distinct users, personalized",
+      "group": {
+        "label": "4 sessions on tasks, distinct users, personalized",
+        "sessions": 4,
+        "addresses": 27,
+        "identicalNodes": 26,
+        "nodeIdentityFraction": 0.963,
+        "identicalSubtreeNodes": 25,
+        "subtreeIdentityFraction": 0.9259,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h1",
+            "depth": 1,
+            "instances": 19,
+            "bytes": 2959,
+            "events": 18
+          },
+          {
+            "id": "root/h0/h0/k:dashboard",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 94,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:tasks",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 85,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 3817,
+        "sharedBytes": 3457,
+        "sharedByteFraction": 0.9057,
+        "divergent": [
+          "root/h0"
+        ]
+      }
+    },
+    {
+      "label": "2 tabs, same user, different routes (dashboard, tasks)",
+      "group": {
+        "label": "2 tabs, same user, different routes (dashboard, tasks)",
+        "sessions": 2,
+        "addresses": 41,
+        "identicalNodes": 6,
+        "nodeIdentityFraction": 0.1463,
+        "identicalSubtreeNodes": 4,
+        "subtreeIdentityFraction": 0.0976,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 3187,
+        "sharedBytes": 319,
+        "sharedByteFraction": 0.1001,
+        "divergent": [
+          "root/h0/h0/k:dashboard",
+          "root/h0/h0/k:tasks",
+          "root/h1",
+          "root/h1/h0/k:drain",
+          "root/h1/h0/k:fanout",
+          "root/h1/h0/k:patch",
+          "root/h1/h0/k:queue",
+          "root/h1/h0/k:renders",
+          "root/h1/h0/k:sessions",
+          "root/h1/h1/k:act-1",
+          "root/h1/h1/k:act-2",
+          "root/h1/h1/k:act-3",
+          "root/h1/h1/k:act-4",
+          "root/h1/h1/k:act-5",
+          "root/h1/h1/k:act-6",
+          "root/h1/h1/k:act-7",
+          "root/h1/h1/k:act-8",
+          "root/h1/h2/k:task-01",
+          "root/h1/h2/k:task-02",
+          "root/h1/h2/k:task-03",
+          "root/h1/h2/k:task-04",
+          "root/h1/h2/k:task-05",
+          "root/h1/h2/k:task-06",
+          "root/h1/h2/k:task-07",
+          "root/h1/h2/k:task-08",
+          "root/h1/h2/k:task-09",
+          "root/h1/h2/k:task-10",
+          "root/h1/h2/k:task-11",
+          "root/h1/h2/k:task-12",
+          "root/h1/h2/k:task-13",
+          "root/h1/h2/k:task-14",
+          "root/h1/h2/k:task-15",
+          "root/h1/h2/k:task-16",
+          "root/h1/h2/k:task-17",
+          "root/h1/h2/k:task-18"
+        ]
+      }
+    },
+    {
+      "label": "2 tabs, different users, different routes (dashboard, tasks)",
+      "group": {
+        "label": "2 tabs, different users, different routes (dashboard, tasks)",
+        "sessions": 2,
+        "addresses": 41,
+        "identicalNodes": 5,
+        "nodeIdentityFraction": 0.122,
+        "identicalSubtreeNodes": 4,
+        "subtreeIdentityFraction": 0.0976,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h0/h0/k:settings",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 92,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:profile",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 90,
+            "events": 1
+          },
+          {
+            "id": "root/h0/h0/k:detail",
+            "depth": 2,
+            "instances": 1,
+            "bytes": 88,
+            "events": 1
+          },
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 3186,
+        "sharedBytes": 319,
+        "sharedByteFraction": 0.1001,
+        "divergent": [
+          "root/h0",
+          "root/h0/h0/k:dashboard",
+          "root/h0/h0/k:tasks",
+          "root/h1",
+          "root/h1/h0/k:drain",
+          "root/h1/h0/k:fanout",
+          "root/h1/h0/k:patch",
+          "root/h1/h0/k:queue",
+          "root/h1/h0/k:renders",
+          "root/h1/h0/k:sessions",
+          "root/h1/h1/k:act-1",
+          "root/h1/h1/k:act-2",
+          "root/h1/h1/k:act-3",
+          "root/h1/h1/k:act-4",
+          "root/h1/h1/k:act-5",
+          "root/h1/h1/k:act-6",
+          "root/h1/h1/k:act-7",
+          "root/h1/h1/k:act-8",
+          "root/h1/h2/k:task-01",
+          "root/h1/h2/k:task-02",
+          "root/h1/h2/k:task-03",
+          "root/h1/h2/k:task-04",
+          "root/h1/h2/k:task-05",
+          "root/h1/h2/k:task-06",
+          "root/h1/h2/k:task-07",
+          "root/h1/h2/k:task-08",
+          "root/h1/h2/k:task-09",
+          "root/h1/h2/k:task-10",
+          "root/h1/h2/k:task-11",
+          "root/h1/h2/k:task-12",
+          "root/h1/h2/k:task-13",
+          "root/h1/h2/k:task-14",
+          "root/h1/h2/k:task-15",
+          "root/h1/h2/k:task-16",
+          "root/h1/h2/k:task-17",
+          "root/h1/h2/k:task-18"
+        ]
+      }
+    },
+    {
+      "label": "5 sessions, one per route, same user, not personalized",
+      "group": {
+        "label": "5 sessions, one per route, same user, not personalized",
+        "sessions": 5,
+        "addresses": 60,
+        "identicalNodes": 3,
+        "nodeIdentityFraction": 0.05,
+        "identicalSubtreeNodes": 1,
+        "subtreeIdentityFraction": 0.0167,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2401,
+        "sharedBytes": 49,
+        "sharedByteFraction": 0.0204,
+        "divergent": [
+          "root/h0/h0/k:dashboard",
+          "root/h0/h0/k:detail",
+          "root/h0/h0/k:profile",
+          "root/h0/h0/k:settings",
+          "root/h0/h0/k:tasks",
+          "root/h1",
+          "root/h1/h0/k:amortize",
+          "root/h1/h0/k:audit",
+          "root/h1/h0/k:beta",
+          "root/h1/h0/k:digest",
+          "root/h1/h0/k:drain",
+          "root/h1/h0/k:fanout",
+          "root/h1/h0/k:patch",
+          "root/h1/h0/k:presence",
+          "root/h1/h0/k:queue",
+          "root/h1/h0/k:renders",
+          "root/h1/h0/k:sessions",
+          "root/h1/h0/k:shared-queries",
+          "root/h1/h1/k:act-1",
+          "root/h1/h1/k:act-2",
+          "root/h1/h1/k:act-3",
+          "root/h1/h1/k:act-4",
+          "root/h1/h1/k:act-5",
+          "root/h1/h1/k:act-6",
+          "root/h1/h1/k:act-7",
+          "root/h1/h1/k:act-8",
+          "root/h1/h2/k:task-01",
+          "root/h1/h2/k:task-02",
+          "root/h1/h2/k:task-03",
+          "root/h1/h2/k:task-04",
+          "root/h1/h2/k:task-05",
+          "root/h1/h2/k:task-06",
+          "root/h1/h2/k:task-07",
+          "root/h1/h2/k:task-08",
+          "root/h1/h2/k:task-09",
+          "root/h1/h2/k:task-10",
+          "root/h1/h2/k:task-11",
+          "root/h1/h2/k:task-12",
+          "root/h1/h2/k:task-13",
+          "root/h1/h2/k:task-14",
+          "root/h1/h2/k:task-15",
+          "root/h1/h2/k:task-16",
+          "root/h1/h2/k:task-17",
+          "root/h1/h2/k:task-18",
+          "root/h1/h3/k:task-01",
+          "root/h1/h3/k:task-05",
+          "root/h1/h3/k:task-09",
+          "root/h1/h3/k:task-13",
+          "root/h1/h3/k:task-17",
+          "root/h1/h4/k:doing",
+          "root/h1/h4/k:done",
+          "root/h1/h4/k:todo",
+          "root/h1/h6/k:task-04",
+          "root/h1/h6/k:task-07",
+          "root/h1/h6/k:task-10",
+          "root/h1/h6/k:task-13",
+          "root/h1/h6/k:task-16"
+        ]
+      }
+    },
+    {
+      "label": "5 sessions, one per route, distinct users, personalized",
+      "group": {
+        "label": "5 sessions, one per route, distinct users, personalized",
+        "sessions": 5,
+        "addresses": 60,
+        "identicalNodes": 2,
+        "nodeIdentityFraction": 0.0333,
+        "identicalSubtreeNodes": 1,
+        "subtreeIdentityFraction": 0.0167,
+        "wholeTreeIdentical": false,
+        "boundaries": [
+          {
+            "id": "root/h2",
+            "depth": 1,
+            "instances": 1,
+            "bytes": 49,
+            "events": 0
+          }
+        ],
+        "bytes": 2396,
+        "sharedBytes": 49,
+        "sharedByteFraction": 0.0205,
+        "divergent": [
+          "root/h0",
+          "root/h0/h0/k:dashboard",
+          "root/h0/h0/k:detail",
+          "root/h0/h0/k:profile",
+          "root/h0/h0/k:settings",
+          "root/h0/h0/k:tasks",
+          "root/h1",
+          "root/h1/h0/k:amortize",
+          "root/h1/h0/k:audit",
+          "root/h1/h0/k:beta",
+          "root/h1/h0/k:digest",
+          "root/h1/h0/k:drain",
+          "root/h1/h0/k:fanout",
+          "root/h1/h0/k:patch",
+          "root/h1/h0/k:presence",
+          "root/h1/h0/k:queue",
+          "root/h1/h0/k:renders",
+          "root/h1/h0/k:sessions",
+          "root/h1/h0/k:shared-queries",
+          "root/h1/h1/k:act-1",
+          "root/h1/h1/k:act-2",
+          "root/h1/h1/k:act-3",
+          "root/h1/h1/k:act-4",
+          "root/h1/h1/k:act-5",
+          "root/h1/h1/k:act-6",
+          "root/h1/h1/k:act-7",
+          "root/h1/h1/k:act-8",
+          "root/h1/h2/k:task-01",
+          "root/h1/h2/k:task-02",
+          "root/h1/h2/k:task-03",
+          "root/h1/h2/k:task-04",
+          "root/h1/h2/k:task-05",
+          "root/h1/h2/k:task-06",
+          "root/h1/h2/k:task-07",
+          "root/h1/h2/k:task-08",
+          "root/h1/h2/k:task-09",
+          "root/h1/h2/k:task-10",
+          "root/h1/h2/k:task-11",
+          "root/h1/h2/k:task-12",
+          "root/h1/h2/k:task-13",
+          "root/h1/h2/k:task-14",
+          "root/h1/h2/k:task-15",
+          "root/h1/h2/k:task-16",
+          "root/h1/h2/k:task-17",
+          "root/h1/h2/k:task-18",
+          "root/h1/h3/k:task-01",
+          "root/h1/h3/k:task-05",
+          "root/h1/h3/k:task-09",
+          "root/h1/h3/k:task-13",
+          "root/h1/h3/k:task-17",
+          "root/h1/h4/k:doing",
+          "root/h1/h4/k:done",
+          "root/h1/h4/k:todo",
+          "root/h1/h6/k:task-04",
+          "root/h1/h6/k:task-07",
+          "root/h1/h6/k:task-10",
+          "root/h1/h6/k:task-13",
+          "root/h1/h6/k:task-16"
+        ]
+      }
+    }
+  ],
+  "metrics": {
+    "sharing": {
+      "sessions": 5,
+      "renders": 246,
+      "quietRenders": 0,
+      "nodes": 23216,
+      "renderMicroseconds": 17141,
+      "microsecondsPerNode": 0.738,
+      "averageNodesPerRender": 94.4,
+      "retainedBytesPerSession": 2852,
+      "sentBytes": {
+        "templates": 256578,
+        "snapshots": 655379,
+        "updates": 0
+      },
+      "eventsHandled": 0,
+      "eventsRejected": 0
+    },
+    "navigation": {
+      "sessions": 1,
+      "renders": 16,
+      "quietRenders": 0,
+      "nodes": 1542,
+      "renderMicroseconds": 1735,
+      "microsecondsPerNode": 1.125,
+      "averageNodesPerRender": 96.4,
+      "retainedBytesPerSession": 2555,
+      "sentBytes": {
+        "templates": 2092,
+        "snapshots": 5191,
+        "updates": 34904
+      },
+      "eventsHandled": 14,
+      "eventsRejected": 0
+    }
+  }
+}

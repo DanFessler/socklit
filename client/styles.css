@@ -1,0 +1,350 @@
+:root {
+  color-scheme: dark;
+
+  --surface: #1e232b;
+  --surface-raised: #242b35;
+  --surface-sunken: #1a1e26;
+  --border: #333c49;
+  --text: #e7ebf1;
+  --text-muted: #93a0b1;
+  --accent: #a86fc0;
+  --accent-strong: #612f76;
+  --danger: #e2687f;
+  --success: #6fc09a;
+
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--surface-sunken);
+  color: var(--text);
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    "Helvetica Neue",
+    sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  gap: 1.5rem;
+  align-items: start;
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+}
+
+@media (max-width: 62rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.app {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  min-height: 20rem;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+.app-header p {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.add-form {
+  display: flex;
+  gap: 0.6rem;
+  margin: 1.5rem 0;
+}
+
+.add-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 0.8rem;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font: inherit;
+}
+
+.add-form input:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+button {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary {
+  padding: 0.65rem 1.1rem;
+  background: var(--accent-strong);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.primary:hover {
+  background: var(--accent);
+}
+
+.todo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.todo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.todo-label {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.todo-label input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.todo-text {
+  overflow-wrap: anywhere;
+}
+
+/* Done styling follows the replicated checkbox rather than a second hole. */
+.todo:has(input:checked) .todo-text {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.remove {
+  padding: 0.3rem 0.55rem;
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.remove:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.empty {
+  margin: 0;
+  padding: 2rem 0;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.link {
+  padding: 0.25rem 0;
+  background: none;
+  color: var(--text-muted);
+  text-decoration: underline;
+}
+
+.link:hover {
+  color: var(--accent);
+}
+
+.inspector {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.inspector-header {
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.inspector-header h2 {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+}
+
+.inspector-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+}
+
+.status::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status[data-state="connected"] {
+  color: var(--success);
+}
+
+.status[data-state="error"],
+.status[data-state="disconnected"] {
+  color: var(--danger);
+}
+
+.revision {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.inspector-summary {
+  margin: 0.4rem 0 0;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.inspector-controls {
+  display: flex;
+  align-items: end;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.control select {
+  padding: 0.35rem 0.4rem;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.8rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.control-inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  padding-bottom: 0.4rem;
+  cursor: pointer;
+}
+
+.control-inline input {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.inspector-latency {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.protocol-entries {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem;
+  max-height: 26rem;
+  overflow-y: auto;
+  font-family: "Cascadia Code", "Consolas", ui-monospace, monospace;
+  font-size: 0.76rem;
+}
+
+.protocol-entries li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 6px;
+  color: var(--text-muted);
+}
+
+.protocol-entries li[data-direction="in"] {
+  background: rgba(97, 47, 118, 0.22);
+  color: var(--text);
+}
+
+.protocol-label {
+  overflow-wrap: anywhere;
+}
+
+.protocol-size {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}

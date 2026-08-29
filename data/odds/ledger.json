@@ -1,0 +1,96 @@
+{
+  "order": [
+    "acct-0a6b631d|m1|buy|1242",
+    "probe-latency|m1|buy|2457",
+    "probe-latency|m4|buy|2462",
+    "probe-latency|m7|buy|2467"
+  ],
+  "resolutions": {
+    "acct-0a6b631d|m1|buy|1242": {
+      "account": "acct-0a6b631d",
+      "marketId": "m1",
+      "name": "Aldergrove v Barrow · Home",
+      "side": "buy",
+      "requested": 40,
+      "limit": 143,
+      "quoteSeq": 1242,
+      "at": 1787898956978.2627,
+      "status": "partial",
+      "filled": 38,
+      "price": 143,
+      "reason": "only 38 of 40 available at 1.43"
+    },
+    "probe-latency|m1|buy|2457": {
+      "account": "probe-latency",
+      "marketId": "m1",
+      "name": "Aldergrove v Barrow · Home",
+      "side": "buy",
+      "requested": 40,
+      "limit": 176,
+      "quoteSeq": 2457,
+      "at": 1787899275487.5789,
+      "status": "partial",
+      "filled": 18,
+      "price": 176,
+      "reason": "only 18 of 40 available at 1.76"
+    },
+    "probe-latency|m4|buy|2462": {
+      "account": "probe-latency",
+      "marketId": "m4",
+      "name": "Garrowby v Hexham · Home",
+      "side": "buy",
+      "requested": 40,
+      "limit": 755,
+      "quoteSeq": 2462,
+      "at": 1787899276808.0137,
+      "status": "filled",
+      "filled": 40,
+      "price": 755,
+      "reason": null
+    },
+    "probe-latency|m7|buy|2467": {
+      "account": "probe-latency",
+      "marketId": "m7",
+      "name": "Marsden v Northwich · Home",
+      "side": "buy",
+      "requested": 40,
+      "limit": 299,
+      "quoteSeq": 2467,
+      "at": 1787899278134.0225,
+      "status": "partial",
+      "filled": 26,
+      "price": 299,
+      "reason": "only 26 of 40 available at 2.99"
+    }
+  },
+  "positions": {
+    "acct-0a6b631d": {
+      "m1": {
+        "marketId": "m1",
+        "name": "Aldergrove v Barrow · Home",
+        "size": 38,
+        "cost": 5434
+      }
+    },
+    "probe-latency": {
+      "m1": {
+        "marketId": "m1",
+        "name": "Aldergrove v Barrow · Home",
+        "size": 18,
+        "cost": 3168
+      },
+      "m4": {
+        "marketId": "m4",
+        "name": "Garrowby v Hexham · Home",
+        "size": 40,
+        "cost": 30200
+      },
+      "m7": {
+        "marketId": "m7",
+        "name": "Marsden v Northwich · Home",
+        "size": 26,
+        "cost": 7774
+      }
+    }
+  }
+}

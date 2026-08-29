@@ -1,0 +1,78 @@
+sessions per population: 200
+records in the company: 60
+role mix: employee 68%, manager 18%, hr 5%, finance 5%, exec 4%
+
+==========================================================================
+1. Data exposure per role (I2 measured on the wire)
+==========================================================================
+ role      sessions  avg snapshot bytes  other people's
+                                          identifiers on the wire
+---------------------------------------------------------------
+employee       136              10,745             0 of 118
+manager         36              11,466             0 of 118
+hr              10              22,969           118 of 118
+finance         10              11,693             0 of 118
+exec             8              15,609             0 of 118
+guest            1              10,687             0 of 118
+
+==========================================================================
+2. Amortization by where authorization is resolved
+==========================================================================
+ granularity  distinct  session  nodes/    shared  render  node
+              trees     ratio    session   nodes   mult    ratio
+-------------------------------------------------------------------
+coarse             60     3.33      807    3,103     3.8   52.0
+fine               60     3.33      802    3,931     4.9   40.8
+personal           60     3.33      867   47,867    55.2    3.6
+
+==========================================================================
+2b. The same population, measured on the roster subtree only
+==========================================================================
+ granularity  distinct roster trees  node ratio  render mult
+-------------------------------------------------------------
+coarse                           60        52.0          3.8
+fine                             60        40.8          4.9
+personal                         60         3.6         55.2
+
+==========================================================================
+2c. Row variants: how many renderings of one record exist
+==========================================================================
+ granularity  template  variants  occurrences  address-stable
+----------------------------------------------------------------
+coarse               3        60       12,000           60/60
+fine                 2       248       12,000         248/248
+personal             3      3600       12,000       3600/3600
+
+==========================================================================
+3. Effect of the number of roles in the population
+==========================================================================
+ roles in population              coarse   fine   personal
+            (node amortization ratio at equal session count)
+----------------------------------------------------------
+employee                             100.3    97.7     5.7
+employee+manager                      81.9    75.8     5.0
+employee+manager+hr                   62.0    53.6     4.3
+employee+manager+hr+finance           52.0    41.4     3.7
+employee+manager+hr+finance+exec      52.0    40.8     3.6
+
+==========================================================================
+4. Does the multiplier saturate as the population grows?
+==========================================================================
+ sessions   coarse mult / ratio   fine mult / ratio   personal mult / ratio
+--------------------------------------------------------------------------
+       25            3.4 / 7.5           4.3 / 5.8          23.5 / 1.1
+       50           3.6 / 13.8          4.7 / 10.6          43.1 / 1.2
+      100           3.7 / 26.7          4.8 / 20.9          48.8 / 2.0
+      200           3.8 / 52.0          4.9 / 40.8          55.2 / 3.6
+      400          3.8 / 104.0          4.9 / 81.6          55.2 / 7.2
+      800          3.8 / 208.1         4.9 / 163.3         55.2 / 14.5
+
+==========================================================================
+5. Render cost measured over every population above
+==========================================================================
+renders            8,526
+nodes              6,964,925
+┬╡s/node            0.049
+nodes/render       816.9
+retained b/session 16,459
+snapshot bytes     135,738,765

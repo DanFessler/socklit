@@ -1,0 +1,49 @@
+{
+  "options": {
+    "sessions": [
+      1000
+    ],
+    "seconds": 10,
+    "warmup": 4,
+    "tickMs": 250,
+    "markets": 120,
+    "moveChance": null,
+    "quoteKeys": false,
+    "mine": false,
+    "url": null,
+    "port": 8799,
+    "batch": 100,
+    "identityTicks": 4,
+    "json": "research/probes/odds-large.json"
+  },
+  "results": [
+    {
+      "sessions": 1000,
+      "connected": 1000,
+      "elapsedSeconds": 10,
+      "renders": 37000,
+      "rendersPerSecond": 3700.1,
+      "microsecondsPerSecond": 536721,
+      "cores": 0.5367,
+      "microsecondsPerNode": 0.085,
+      "nodesPerRender": 1711,
+      "quietFraction": 0,
+      "updateBytesPerSecond": 89530433,
+      "retainedBytesPerSession": 25258,
+      "baselineRss": 100634624,
+      "loadedRss": 839847936,
+      "rssPerSession": 739213,
+      "framesReceived": 62810,
+      "bytesReceived": 1497399120,
+      "completeTicks": 36,
+      "deliveryP50": 272.08,
+      "deliveryP95": 295.65,
+      "deliveryMax": 322.47,
+      "spreadMean": 271.24,
+      "spreadMax": 321.19,
+      "identicalFraction": 1,
+      "identityTicksSampled": 4,
+      "otherProbeRenders": 0
+    }
+  ]
+}

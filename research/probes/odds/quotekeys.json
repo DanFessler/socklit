@@ -1,0 +1,46 @@
+{
+  "options": {
+    "sessions": [
+      250
+    ],
+    "seconds": 10,
+    "warmup": 3,
+    "tickMs": 250,
+    "markets": 40,
+    "moveChance": null,
+    "quoteKeys": true,
+    "mine": false,
+    "url": null,
+    "port": 8799,
+    "batch": 50,
+    "identityTicks": 4,
+    "json": "research/probes/odds-quotekeys.json"
+  },
+  "results": [
+    {
+      "sessions": 250,
+      "connected": 250,
+      "elapsedSeconds": 10,
+      "renders": 9500,
+      "rendersPerSecond": 949.7,
+      "microsecondsPerSecond": 57606,
+      "cores": 0.0576,
+      "microsecondsPerNode": 0.09,
+      "nodesPerRender": 671,
+      "quietFraction": 0,
+      "updateBytesPerSecond": 8260159,
+      "retainedBytesPerSession": 10605,
+      "framesReceived": 13000,
+      "bytesReceived": 110871500,
+      "completeTicks": 38,
+      "deliveryP50": 28.96,
+      "deliveryP95": 32.96,
+      "deliveryMax": 36.26,
+      "spreadMean": 28.51,
+      "spreadMax": 35.34,
+      "identicalFraction": 1,
+      "identityTicksSampled": 4,
+      "otherProbeRenders": 0
+    }
+  ]
+}

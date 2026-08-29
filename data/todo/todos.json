@@ -1,0 +1,29 @@
+{
+  "todos": [
+    {
+      "id": "1a390984-0270-4ccb-aaf2-da81b82ddbc7",
+      "text": "this is a neat app eh?",
+      "done": false
+    },
+    {
+      "id": "ed17b499-a8e2-4661-a094-1b5c874eb5aa",
+      "text": "sure is",
+      "done": false
+    },
+    {
+      "id": "1b5c0a33-6676-4823-ae9d-70a114e1b6ef",
+      "text": "cross-session check",
+      "done": false
+    },
+    {
+      "id": "e688793a-1481-4713-a952-de766be59a81",
+      "text": "test",
+      "done": false
+    },
+    {
+      "id": "a6729aa8-0aab-42f9-8dd3-6d74a7c3bb75",
+      "text": "this is neat",
+      "done": false
+    }
+  ]
+}
