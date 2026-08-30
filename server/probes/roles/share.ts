@@ -167,6 +167,10 @@ export class ShareCensusBuilder {
       return { key: `i${child.key}`, nodes: child.nodes };
     }
 
+    if (value.kind === "island") {
+      return { key: `g${value.name}:${JSON.stringify(value.props)}`, nodes: 0 };
+    }
+
     const keys: string[] = [];
     let nodes = 0;
     for (const item of value.items) {

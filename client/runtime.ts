@@ -2,10 +2,12 @@ import { html, nothing, render, type TemplateResult } from "lit-html";
 import { repeat } from "lit-html/directives/repeat.js";
 
 import { focusTarget } from "./focus";
+import type { IslandBridge } from "./island-host";
 import {
   isWireEventValue,
   isWireFocusValue,
   isWireInstanceValue,
+  isWireIslandValue,
   isWireListValue,
   type ChangePayload,
   type ClientMessage,
@@ -43,11 +45,16 @@ export class ClientRuntime {
 
   private root: WireInstance | null = null;
   private currentRevision = 0;
+  private readonly bridge: IslandBridge;
 
   constructor(options: ClientRuntimeOptions) {
     this.mount = options.mount;
     this.send = options.send;
     this.onError = options.onError;
+    this.bridge = {
+      send: options.send,
+      revision: () => this.currentRevision,
+    };
   }
 
   get revision(): number {
@@ -210,6 +217,12 @@ export class ClientRuntime {
     }
     if (isWireFocusValue(value)) {
       return focusTarget(value.active, value.nonce);
+    }
+    if (isWireIslandValue(value)) {
+      return html`<socklit-island
+        .bridge=${this.bridge}
+        .spec=${{ instanceId, hole, value }}
+      ></socklit-island>`;
     }
     return value;
   }

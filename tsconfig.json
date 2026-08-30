@@ -15,7 +15,16 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx"
   },
-  "include": ["shared", "server", "client", "test", "vite.config.ts", "vitest.config.ts"]
+  "include": [
+    "shared",
+    "server",
+    "client",
+    "islands",
+    "test",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
 }

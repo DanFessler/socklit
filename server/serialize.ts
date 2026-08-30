@@ -3,6 +3,7 @@ import type { TemplateResult } from "lit-html";
 import type {
   EventPayload,
   WireInstance,
+  WireJson,
   WireListItem,
   WireTemplate,
   WireValue,
@@ -14,6 +15,7 @@ import {
   type RenderOutput,
 } from "./component";
 import { isFocusRequest } from "./focus";
+import { islandPropJson, isIslandMount, type IslandMount } from "./island";
 import { escapeKey, isKeyedList } from "./keyed";
 import type { SessionHandle } from "./session";
 
@@ -33,9 +35,22 @@ export type ServerHandler = (
 /** instance address -> hole index -> closure */
 export type HandlerTable = Map<string, Map<number, ServerHandler>>;
 
+/**
+ * An island callback. Invoked as `fn(...args, session)` so a shorter
+ * function can ignore the session the same way server event handlers do.
+ */
+export type IslandHandler = (...args: unknown[]) => unknown;
+
+/** instance address -> hole index -> event name -> closure */
+export type IslandHandlerTable = Map<
+  string,
+  Map<number, Map<string, IslandHandler>>
+>;
+
 export type SerializeResult = {
   root: WireInstance;
   handlers: HandlerTable;
+  islandHandlers: IslandHandlerTable;
   usedTemplateIds: Set<number>;
 };
 
@@ -252,6 +267,7 @@ const sharedAddresses = new AddressBook();
 type Walk = {
   registry: TemplateRegistry;
   handlers: HandlerTable;
+  islandHandlers: IslandHandlerTable;
   usedTemplateIds: Set<number>;
   host: HookHost;
   addresses: AddressBook;
@@ -285,6 +301,7 @@ export function serialize(
   const walk: Walk = {
     registry,
     handlers: new Map(),
+    islandHandlers: new Map(),
     usedTemplateIds: new Set(),
     host,
     addresses,
@@ -297,6 +314,7 @@ export function serialize(
   return {
     root,
     handlers: walk.handlers,
+    islandHandlers: walk.islandHandlers,
     usedTemplateIds: walk.usedTemplateIds,
   };
 }
@@ -368,6 +386,10 @@ function serializeValue(
     return { kind: "event" };
   }
 
+  if (isIslandMount(value)) {
+    return serializeIsland(value, at, hole, walk);
+  }
+
   if (
     isComponentMarker(value) ||
     isProvidedValue(value) ||
@@ -427,8 +449,54 @@ function serializeValue(
   }
 
   throw new SerializeError(
-    `${describeHole(at.id, hole)} is an unsupported ${typeof value} value. Supported holes: string, number, boolean, null, nested html template, component, keyed list, event handler, focusWhen() request.`,
+    `${describeHole(at.id, hole)} is an unsupported ${typeof value} value. Supported holes: string, number, boolean, null, nested html template, component, keyed list, event handler, focusWhen() request, island.mount().`,
   );
+}
+
+function serializeIsland(
+  mount: IslandMount,
+  at: AddressNode,
+  hole: number,
+  walk: Walk,
+): WireValue {
+  const props: { [key: string]: WireJson } = {};
+  const events: string[] = [];
+  const eventMap = new Map<string, IslandHandler>();
+
+  for (const [key, prop] of Object.entries(mount.props)) {
+    if (typeof prop === "function") {
+      if (!/^[A-Za-z][A-Za-z0-9]*$/.test(key)) {
+        throw new SerializeError(
+          `${describeHole(at.id, hole)} island "${mount.name}" callback "${key}" must be an identifier`,
+        );
+      }
+      events.push(key);
+      eventMap.set(key, prop as IslandHandler);
+      continue;
+    }
+
+    const json = islandPropJson(
+      prop,
+      `${describeHole(at.id, hole)} prop "${key}"`,
+    );
+    if (!json.ok) {
+      throw new SerializeError(
+        `${json.error}. Island "${mount.name}" only accepts JSON props and top-level callbacks.`,
+      );
+    }
+    props[key] = json.value;
+  }
+
+  if (eventMap.size > 0) {
+    let holes = walk.islandHandlers.get(at.id);
+    if (!holes) {
+      holes = new Map();
+      walk.islandHandlers.set(at.id, holes);
+    }
+    holes.set(hole, eventMap);
+  }
+
+  return { kind: "island", name: mount.name, props, events };
 }
 
 export function isTemplateResult(value: unknown): value is TemplateResult {

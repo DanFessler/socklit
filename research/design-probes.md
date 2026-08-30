@@ -47,7 +47,7 @@ document with methodology and caveats. This section records what they settled.
 | **S5** initial state and first paint | **New, unprobed.** No probe needed it because none served a visitor without a socket | — |
 | **A1** uncontrolled escape | **Confirmed unusable as policy**, with three new failure modes | admin |
 | **A2** client primitives | **Adopt.** The minimum set is one primitive, and it is necessary but not sufficient | admin, ledger |
-| **A3** open islands | **Adopt separately, and do not build A2 on it.** The framing here was wrong | admin |
+| **A3** open islands | **Adopt separately, and do not build A2 on it.** Authoring prototype on this branch | admin, islands |
 | **A4** declarative prediction | **Close it unbuilt.** Reachable coverage is 20%, not 80%, and A2 plus A9 cover it | ledger, odds |
 | **A5** windowed collections | **Promoted.** Now the binding constraint in two probes rather than a future concern | ledger, admin |
 | **A6** shared subtree rendering | **Build, per-subtree from the start.** The blocker was the handler signature, which has since been changed | odds, routes, roles |
@@ -674,6 +674,14 @@ So the position:
   wrong shape for every primitive the UI needs. Building the dropdown as an island
   produces a worse dropdown *and* a prop contract to version.
 
+**Authoring is prototyped** on this branch. `defineIsland` / `.mount()` is a
+hole kind; `*.island.tsx` is the only React in the repo; Radix and Tailwind
+sit behind that wall. The call site cannot be mistaken for a server
+component, which is the thing RSC got wrong. See
+[`research/probes/islands.md`](probes/islands.md). A chart remains a valid
+later island of the same shape — this probe tested the overlay half of npm,
+not the canvas half.
+
 One implementation note that keeps the change small: a trigger in attribute
 position does not fit the current vocabulary, but it does not need to. A handler
 that serializes to `{kind: "client", gate: "...", op: "toggle"}` instead of
@@ -976,6 +984,7 @@ Applications that break something. Each names the questions it forces.
 | Menu-heavy admin | Dropdowns, modals, tooltips, popovers | A1-A3, the ownership taxonomy | [built](probes/admin.md) |
 | Checkout wizard | Four steps, then the laptop sleeps | S4, A8 | — |
 | Chart dashboard | Any real charting library | A3 | — |
+| Client islands | Radix + Tailwind behind `.mount()` | A3 authoring | [built](probes/islands.md) |
 | Spreadsheet / editor | 10k cells, or collaborative text | A7, A5, A2 | — |
 
 **Ticking clock** was three lines of code and the highest information-per-effort
@@ -1429,8 +1438,9 @@ Ordered by what they would settle, not by effort:
 - **Presence indicator** — the sparse-graph case that read-scoped invalidation
   exists for, and therefore the only way to validate S3's recommendation rather
   than infer it.
-- **Chart dashboard** — the only remaining test of A3 on its own merits, now that
-  A3 has been separated from A2.
+- **Chart dashboard** — the remaining *library* test of A3 (canvas, not
+  overlays). The authoring boundary is prototyped in
+  [islands](probes/islands.md).
 - **Election scoreboard** — largely answered by the odds board, which was the same
   measurement with contention added. Worth building only as an A6 regression once
   A6 exists.

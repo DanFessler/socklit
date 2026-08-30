@@ -4,7 +4,8 @@ import type { WebSocket } from "ws";
 import {
   MAX_MESSAGE_BYTES,
   parseClientMessage,
-  type ClientMessage,
+  type EventMessage,
+  type IslandMessage,
   type ServerErrorCode,
   type ServerMessage,
   type WireInstance,
@@ -23,6 +24,7 @@ import {
   serialize,
   TemplateRegistry,
   type HandlerTable,
+  type IslandHandlerTable,
   type ServerHandler,
 } from "./serialize";
 
@@ -58,6 +60,7 @@ type Session = {
   revision: number;
   committedRoot: WireInstance | null;
   handlers: HandlerTable;
+  islandHandlers: IslandHandlerTable;
   sentTemplateIds: Set<number>;
   queue: Promise<void>;
   invalidMessages: number;
@@ -125,6 +128,7 @@ export class Runtime {
       revision: 0,
       committedRoot: null,
       handlers: new Map(),
+      islandHandlers: new Map(),
       sentTemplateIds: new Set(),
       queue: Promise.resolve(),
       invalidMessages: 0,
@@ -284,12 +288,17 @@ export class Runtime {
       return;
     }
 
+    if (message.type === "island") {
+      await this.handleIsland(session, message);
+      return;
+    }
+
     await this.handleEvent(session, message);
   }
 
   private async handleEvent(
     session: Session,
-    message: ClientMessage,
+    message: EventMessage,
   ): Promise<void> {
     // Validity is decided by the address, not by a session-wide revision. The
     // address names the exact node and hole the user acted on, so an unrelated
@@ -346,9 +355,53 @@ export class Runtime {
 
   private lookupHandler(
     session: Session,
-    message: ClientMessage,
+    message: EventMessage,
   ): ServerHandler | undefined {
     return session.handlers.get(message.instanceId)?.get(message.hole);
+  }
+
+  private async handleIsland(
+    session: Session,
+    message: IslandMessage,
+  ): Promise<void> {
+    const handler = session.islandHandlers
+      .get(message.instanceId)
+      ?.get(message.hole)
+      ?.get(message.event);
+
+    if (!handler) {
+      this.metrics?.recordEvent(false);
+
+      if (message.revision !== session.revision) {
+        this.sendError(
+          session,
+          "stale_event",
+          `island ${message.instanceId}#${message.hole}.${message.event} no longer exists at revision ${session.revision}`,
+          true,
+        );
+        this.sendSnapshot(session);
+        return;
+      }
+
+      this.rejectMessage(
+        session,
+        `no island handler at ${message.instanceId}#${message.hole}.${message.event}`,
+      );
+      return;
+    }
+
+    this.metrics?.recordEvent(true);
+
+    try {
+      await handler(...message.args, session.context);
+    } catch (error) {
+      this.log(
+        `session ${session.id} island handler failed: ${describeError(error)}`,
+      );
+      this.sendError(session, "handler_failed", describeError(error), true);
+    }
+
+    await this.flush();
   }
 
   /**
@@ -362,11 +415,12 @@ export class Runtime {
 
     let root: WireInstance;
     let handlers: HandlerTable;
+    let islandHandlers: IslandHandlerTable;
     let usedTemplateIds: Set<number>;
     const startedAt = process.hrtime.bigint();
 
     try {
-      ({ root, handlers, usedTemplateIds } = serialize(
+      ({ root, handlers, islandHandlers, usedTemplateIds } = serialize(
         session.instance.app(),
         this.registry,
         session.hooks,
@@ -385,6 +439,7 @@ export class Runtime {
       this.recordRender(root, startedAt, false);
       session.committedRoot = root;
       session.handlers = handlers;
+      session.islandHandlers = islandHandlers;
       session.revision += 1;
       this.markTemplatesSent(session, templates);
 
@@ -407,6 +462,7 @@ export class Runtime {
     // identical, but the handlers now close over freshly read state.
     session.committedRoot = root;
     session.handlers = handlers;
+    session.islandHandlers = islandHandlers;
 
     if (quiet) return;
 

@@ -3,6 +3,7 @@ import {
   type PatchOperation,
   type WireFocusValue,
   type WireInstance,
+  type WireIslandValue,
   type WireListValue,
   type WireValue,
 } from "../shared/protocol";
@@ -106,6 +107,20 @@ function diffValue(
       return;
     }
 
+    case "island": {
+      const before = previous as WireIslandValue;
+      const after = next as WireIslandValue;
+
+      if (
+        before.name !== after.name ||
+        !sameEvents(before.events, after.events) ||
+        JSON.stringify(before.props) !== JSON.stringify(after.props)
+      ) {
+        operations.push({ op: "set", instanceId, hole, value: next });
+      }
+      return;
+    }
+
     case "list": {
       const previousList = previous as WireListValue;
       const nextList = next as WireListValue;
@@ -149,6 +164,11 @@ function sameShape(previous: WireInstance, next: WireInstance): boolean {
     previous.templateId === next.templateId &&
     previous.values.length === next.values.length
   );
+}
+
+function sameEvents(previous: string[], next: string[]): boolean {
+  if (previous.length !== next.length) return false;
+  return previous.every((name, index) => name === next[index]);
 }
 
 function sameKeys(previous: WireListValue, next: WireListValue): boolean {

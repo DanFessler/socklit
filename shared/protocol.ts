@@ -21,6 +21,15 @@ export const MAX_INSTANCE_ID_LENGTH = 512;
  */
 export const MAX_KEY_LENGTH = 32;
 
+/** Longest island callback name. Real names are `onChange`, `onOpen`. */
+export const MAX_ISLAND_EVENT_NAME = 64;
+
+/** Most arguments one island callback may send. */
+export const MAX_ISLAND_ARGS = 8;
+
+/** Deepest object an island may put in props or callback arguments. */
+export const MAX_JSON_DEPTH = 8;
+
 /** Static parts of one `html` tag site. Sent once, then referenced by id. */
 export type WireTemplate = {
   id: number;
@@ -33,6 +42,30 @@ export type WireInstanceValue = { kind: "instance"; instance: WireInstance };
 export type WireListValue = { kind: "list"; items: WireListItem[] };
 export type WireListItem = { key: string; instance: WireInstance };
 export type WirePrimitive = string | number | boolean | null;
+
+/**
+ * The only values that may cross into an island: JSON, nothing with a
+ * prototype, and nothing that is a server render value.
+ */
+export type WireJson =
+  | string
+  | number
+  | boolean
+  | null
+  | WireJson[]
+  | { [key: string]: WireJson };
+
+/**
+ * A hole the server does not render. The client mounts a registered React
+ * component here, feeds it `props`, and turns each name in `events` into a
+ * stub that sends `{ type: "island" }` back.
+ */
+export type WireIslandValue = {
+  kind: "island";
+  name: string;
+  props: { [key: string]: WireJson };
+  events: string[];
+};
 
 /**
  * A request that the element carrying this hole take focus.
@@ -55,7 +88,8 @@ export type WireValue =
   | WireEventValue
   | WireInstanceValue
   | WireListValue
-  | WireFocusValue;
+  | WireFocusValue
+  | WireIslandValue;
 
 /** One rendered occurrence of a template, addressed by a structural id. */
 export type WireInstance = {
@@ -139,13 +173,28 @@ export type EventPayload =
   | KeyPayload
   | FocusPayload;
 
-export type ClientMessage = {
+export type EventMessage = {
   type: "event";
   revision: number;
   instanceId: string;
   hole: number;
   payload: EventPayload;
 };
+
+/**
+ * An island called one of its stubs. `args` is whatever the React component
+ * passed; the server handler is a closure that never left the process.
+ */
+export type IslandMessage = {
+  type: "island";
+  revision: number;
+  instanceId: string;
+  hole: number;
+  event: string;
+  args: WireJson[];
+};
+
+export type ClientMessage = EventMessage | IslandMessage;
 
 export function isWireEventValue(value: WireValue): value is WireEventValue {
   return isTaggedValue(value) && value.kind === "event";
@@ -165,13 +214,18 @@ export function isWireFocusValue(value: WireValue): value is WireFocusValue {
   return isTaggedValue(value) && value.kind === "focus";
 }
 
+export function isWireIslandValue(value: WireValue): value is WireIslandValue {
+  return isTaggedValue(value) && value.kind === "island";
+}
+
 function isTaggedValue(
   value: WireValue,
 ): value is
   | WireEventValue
   | WireInstanceValue
   | WireListValue
-  | WireFocusValue {
+  | WireFocusValue
+  | WireIslandValue {
   return typeof value === "object" && value !== null;
 }
 
@@ -180,13 +234,15 @@ export type WireValueKind =
   | "event"
   | "instance"
   | "list"
-  | "focus";
+  | "focus"
+  | "island";
 
 export function wireValueKind(value: WireValue): WireValueKind {
   if (isWireEventValue(value)) return "event";
   if (isWireInstanceValue(value)) return "instance";
   if (isWireListValue(value)) return "list";
   if (isWireFocusValue(value)) return "focus";
+  if (isWireIslandValue(value)) return "island";
   return "primitive";
 }
 
@@ -207,8 +263,25 @@ export function parseClientMessage(raw: string): ClientMessage | null {
     return null;
   }
 
-  if (!isRecord(parsed) || parsed["type"] !== "event") return null;
+  if (!isRecord(parsed)) return null;
 
+  const address = parseAddress(parsed);
+  if (!address) return null;
+
+  if (parsed["type"] === "island") {
+    return parseIslandMessage(parsed, address);
+  }
+  if (parsed["type"] !== "event") return null;
+
+  const payload = parseEventPayload(parsed["payload"]);
+  if (payload === null) return null;
+
+  return { type: "event", ...address, payload };
+}
+
+function parseAddress(
+  parsed: Record<string, unknown>,
+): { revision: number; instanceId: string; hole: number } | null {
   const revision = parsed["revision"];
   const instanceId = parsed["instanceId"];
   const hole = parsed["hole"];
@@ -224,10 +297,68 @@ export function parseClientMessage(raw: string): ClientMessage | null {
   }
   if (!isIndex(hole) || hole > MAX_HOLE_INDEX) return null;
 
-  const payload = parseEventPayload(parsed["payload"]);
-  if (payload === null) return null;
+  return { revision, instanceId, hole };
+}
 
-  return { type: "event", revision, instanceId, hole, payload };
+function parseIslandMessage(
+  parsed: Record<string, unknown>,
+  address: { revision: number; instanceId: string; hole: number },
+): IslandMessage | null {
+  const event = parsed["event"];
+  if (
+    typeof event !== "string" ||
+    event.length === 0 ||
+    event.length > MAX_ISLAND_EVENT_NAME ||
+    !/^[A-Za-z][A-Za-z0-9]*$/.test(event)
+  ) {
+    return null;
+  }
+
+  const args = parsed["args"];
+  if (!Array.isArray(args) || args.length > MAX_ISLAND_ARGS) return null;
+
+  const sanitized: WireJson[] = [];
+  for (const arg of args) {
+    const json = parseWireJson(arg, 0);
+    if (json === undefined) return null;
+    sanitized.push(json);
+  }
+
+  return { type: "island", ...address, event, args: sanitized };
+}
+
+/**
+ * Accepts JSON values and nothing else. `undefined` means rejected: a nested
+ * function, a host object, or a tree deeper than `MAX_JSON_DEPTH`.
+ */
+export function parseWireJson(value: unknown, depth: number): WireJson | undefined {
+  if (depth > MAX_JSON_DEPTH) return undefined;
+  if (value === null) return null;
+  if (typeof value === "string" || typeof value === "boolean") return value;
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : undefined;
+  }
+  if (Array.isArray(value)) {
+    const items: WireJson[] = [];
+    for (const item of value) {
+      const json = parseWireJson(item, depth + 1);
+      if (json === undefined) return undefined;
+      items.push(json);
+    }
+    return items;
+  }
+  if (typeof value !== "object") return undefined;
+
+  const proto = Object.getPrototypeOf(value);
+  if (proto !== Object.prototype && proto !== null) return undefined;
+
+  const record: { [key: string]: WireJson } = {};
+  for (const [key, nested] of Object.entries(value)) {
+    const json = parseWireJson(nested, depth + 1);
+    if (json === undefined) return undefined;
+    record[key] = json;
+  }
+  return record;
 }
 
 function parseEventPayload(value: unknown): EventPayload | null {

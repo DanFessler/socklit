@@ -126,6 +126,7 @@ function localSignature(instance: WireInstance): string {
       if (value.kind === "event") return "@";
       if (value.kind === "focus") return { f: value.active, n: value.nonce };
       if (value.kind === "instance") return { i: value.instance.id };
+      if (value.kind === "island") return { island: value.name };
       return { k: value.items.map((item) => item.key) };
     }),
   ]);

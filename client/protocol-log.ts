@@ -89,6 +89,9 @@ function describe(message: ServerMessage | ClientMessage): string {
 
     case "event":
       return `event ${message.payload.kind} ${message.instanceId}#${message.hole}`;
+
+    case "island":
+      return `island ${message.event} ${message.instanceId}#${message.hole}`;
   }
 }
 

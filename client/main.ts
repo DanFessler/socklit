@@ -12,6 +12,7 @@ import {
   type LatencyProfile,
 } from "./latency";
 import { ClientRuntime } from "./runtime";
+import "./island-host";
 import { ProtocolLog } from "./protocol-log";
 
 const RECONNECT_MIN_MS = 500;

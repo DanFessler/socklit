@@ -281,6 +281,7 @@ export class HarnessClient {
 
     if (value.kind === "event") return "";
     if (value.kind === "focus") return "";
+    if (value.kind === "island") return "";
     if (value.kind === "instance") return this.renderInstance(value.instance);
     return value.items
       .map((item) => this.renderInstance(item.instance))
