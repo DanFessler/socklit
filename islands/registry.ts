@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 
+import { AssigneePicker } from "./assignee-picker.island";
 import { ColorPicker } from "./color-picker.island";
 import { PrioritySelect } from "./priority-select.island";
 
@@ -13,6 +14,7 @@ export const islandComponents: Record<
   string,
   ComponentType<Record<string, unknown>>
 > = {
+  AssigneePicker: AssigneePicker as ComponentType<Record<string, unknown>>,
   ColorPicker: ColorPicker as ComponentType<Record<string, unknown>>,
   PrioritySelect: PrioritySelect as ComponentType<Record<string, unknown>>,
 };

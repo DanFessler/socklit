@@ -56,7 +56,7 @@ export const TodoApp = component(function TodoApp(props: { db: Database }) {
           ${keyed(
             todos,
             (todo) => todo.id,
-            (todo) => TodoRow({ db, todo }),
+            (todo) => html`<TodoRow .db=${db} .todo=${todo}></TodoRow>`,
           )}
         </ul>`}
 
@@ -75,7 +75,7 @@ export const TodoApp = component(function TodoApp(props: { db: Database }) {
   `;
 });
 
-const TodoRow = component(function TodoRow(props: { db: Database; todo: Todo }) {
+component.tag("TodoRow", (props: { db: Database; todo: Todo }) => {
   const { db, todo } = props;
 
   return html`

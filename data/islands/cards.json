@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cut-branch",
+    "title": "Cut a release branch",
+    "done": false,
+    "priority": "urgent",
+    "color": "#f472b6",
+    "team": "west",
+    "assigneeId": "dana"
+  },
+  {
+    "id": "write-note",
+    "title": "Write the islands note",
+    "done": false,
+    "priority": "low",
+    "color": "#7dd3fc",
+    "team": "west",
+    "assigneeId": "dana"
+  },
+  {
+    "id": "row-actions",
+    "title": "Do not put row actions inside an island",
+    "done": true,
+    "priority": "urgent",
+    "color": "#fb7185",
+    "team": "west",
+    "assigneeId": "dana"
+  },
+  {
+    "id": "8833811f-bb84-4364-91b7-abce6360a5ad",
+    "title": "Try a fourth island row",
+    "done": false,
+    "priority": "medium",
+    "color": "#a78bfa",
+    "team": "eu",
+    "assigneeId": "nina"
+  }
+]

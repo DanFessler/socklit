@@ -111,13 +111,40 @@ function diffValue(
       const before = previous as WireIslandValue;
       const after = next as WireIslandValue;
 
-      if (
+      const shellChanged =
         before.name !== after.name ||
         !sameEvents(before.events, after.events) ||
-        JSON.stringify(before.props) !== JSON.stringify(after.props)
-      ) {
-        operations.push({ op: "set", instanceId, hole, value: next });
+        JSON.stringify(before.props) !== JSON.stringify(after.props);
+
+      if (shellChanged) {
+        // Slot travels separately so a label change does not replace the
+        // hosted tree — that would remount nothing on the React side, but
+        // it would resend the whole slot for a one-word patch.
+        operations.push({
+          op: "set",
+          instanceId,
+          hole,
+          value: {
+            kind: "island",
+            name: after.name,
+            props: after.props,
+            events: after.events,
+          },
+        });
       }
+
+      if (!before.slot && !after.slot) return;
+
+      if (
+        before.slot &&
+        after.slot &&
+        sameShape(before.slot, after.slot)
+      ) {
+        diffValues(before.slot, after.slot, operations);
+        return;
+      }
+
+      operations.push({ op: "set", instanceId, hole, value: after });
       return;
     }
 

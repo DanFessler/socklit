@@ -639,17 +639,28 @@ some applications simply cannot be built.
 competing implementations of one idea; they are different shapes, and neither
 choice above is the one that has to be made.
 
-An island is a *subtree* boundary: it owns its DOM, receives props, and the server
-stops rendering inside it. Every primitive A2 actually needs cuts the other way.
-The dropdown's open/closed flag is client-owned while its items are
-server-rendered *with server handlers on them* — an island cannot express that,
-and an island that owned the dropdown would need the items as props, meaning the
-server serializes `[{label, action}]`, the client renders it, and clicking sends
-an action name back. That reinvents the endpoint, the request type and the
-response type this project exists to delete, for a menu. The same applies to the
-text input, whose value is client-owned while its validation state and error
-message are server-rendered siblings, and to selection, whose every consumer is
-server-rendered.
+A *terminal* island is a subtree boundary: it owns its DOM, receives props, and
+the server stops rendering inside it. That is the right shape for a date picker
+or a chart. It is the wrong shape for every primitive A2 actually needs. The
+dropdown's open/closed flag is client-owned while its items are server-rendered
+*with server handlers on them*. A terminal island cannot express that, and an
+island that owned the dropdown as props would serialize `[{label, action}]`,
+render it on the client, and send an action name back. That reinvents the
+endpoint this project exists to delete, for a menu.
+
+A **slot** is the allowed mix, and it is not children. The island owns chrome
+the server cannot draw — a Radix portal, a focus trap. `<slot>` names a
+server region the replica keeps painting into a well the React tree placed.
+The island cannot read that tree. Clicking a row inside it is an ordinary
+`@click`, not an island event. That is how Assign works on the islands
+probe: change the team filter while the popover is open, and the list
+swaps without remounting the overlay.
+
+It is still the wrong way to build A2. A slot exists because some chrome
+needs a real library. A menu that does not is still `gate().contains()`.
+The same applies to the text input, whose value is client-owned while its
+validation state and error message are server-rendered siblings, and to
+selection, whose every consumer is server-rendered.
 
 **These are not components. They are modifiers on server-rendered subtrees**, and
 the right shape is a new kind of *hole value* — exactly what `keyed()` already is.
@@ -674,13 +685,15 @@ So the position:
   wrong shape for every primitive the UI needs. Building the dropdown as an island
   produces a worse dropdown *and* a prop contract to version.
 
-**Authoring is prototyped** on this branch. `defineIsland` / `.mount()` is a
-hole kind; `*.island.tsx` is the only React in the repo; Radix and Tailwind
-sit behind that wall. The call site cannot be mistaken for a server
-component, which is the thing RSC got wrong. See
-[`research/probes/islands.md`](probes/islands.md). A chart remains a valid
-later island of the same shape — this probe tested the overlay half of npm,
-not the canvas half.
+**Authoring is prototyped** on this branch. `defineIsland` plus `<mount>`
+and `<slot>` are reserved tags that compile to `mount()` / `slot()`
+markers; `*.island.tsx` is the only React in the repo; Radix and Tailwind
+sit behind that wall.
+The call site cannot be mistaken for a server component, which is the
+thing RSC got wrong. See [`research/probes/islands.md`](probes/islands.md).
+A chart remains a valid later *terminal* island of the same shape — this
+probe tested the overlay half of npm, and then whether that overlay can
+host a live server region.
 
 One implementation note that keeps the change small: a trigger in attribute
 position does not fit the current vocabulary, but it does not need to. A handler
@@ -984,7 +997,7 @@ Applications that break something. Each names the questions it forces.
 | Menu-heavy admin | Dropdowns, modals, tooltips, popovers | A1-A3, the ownership taxonomy | [built](probes/admin.md) |
 | Checkout wizard | Four steps, then the laptop sleeps | S4, A8 | — |
 | Chart dashboard | Any real charting library | A3 | — |
-| Client islands | Radix + Tailwind behind `.mount()` | A3 authoring | [built](probes/islands.md) |
+| Client islands | Radix + Tailwind behind `<mount>` / `<slot>` | A3 authoring | [built](probes/islands.md) |
 | Spreadsheet / editor | 10k cells, or collaborative text | A7, A5, A2 | — |
 
 **Ticking clock** was three lines of code and the highest information-per-effort

@@ -1,12 +1,14 @@
 # Client islands
 
 The result in one paragraph. An island is a **named hole**, not a second
-kind of component. The server writes `ColorPicker.mount({ value, onChange })`.
+kind of component. The server writes `<mount .Island=${ColorPicker} …>`.
 The browser mounts a real React tree at that address. Opening a Radix select
 never touches the socket; choosing a value is an ordinary server closure over
-the row. The boundary is a folder and a word — `*.island.tsx` and `.mount()` —
-so the two worlds cannot be mistaken for each other the way React Server
-Components can.
+the row. A second element, `<slot>`, lets that React tree *host* a server
+region — the island owns the overlay; the replica keeps painting the box.
+The boundary is a folder and two tags — `*.island.tsx`, `<mount>`,
+`<slot>` — so the two worlds cannot be mistaken for each other the way
+React Server Components can.
 
 ```
 http://localhost:5182/?probe=islands
@@ -22,10 +24,21 @@ whole product.
 ## What the probe does
 
 A ship board. Each row is a server template: checkbox, title, delete. Two
-holes on the row are islands — a Radix select for priority, a Radix popover
-for colour. Tailwind classes sit on both sides of the boundary; they are
-strings. The dashed outline and the "island" badge are research chrome, so
-a reader can see where the server stopped rendering.
+holes on the row are **terminal** islands — a Radix select for priority, a
+Radix popover for colour. A third is a **host**: Assign is a Radix popover
+whose body is a `<slot>`. Team chips and people rows inside that well are
+server templates with server closures. Change the team while the popover is
+open and the list swaps; the overlay does not remount.
+
+Cities-in-a-state was the first candidate for that last hole and is the
+wrong demo. A city name is a string. Strings are JSON props. A dependent
+dropdown of strings is a terminal island whose `options` changed. The
+load-bearing case is a dependent *tree* — rich rows, handlers over real
+objects — living inside chrome the server cannot draw.
+
+Tailwind classes sit on both sides of the boundary; they are strings. The
+dashed outlines are research chrome: purple for the island, green for the
+slot, so a reader can see which world owns which box.
 
 The third seeded card is titled "Do not put row actions inside an island"
 because that is the mistake this shape invites, and the delete button next
@@ -35,7 +48,7 @@ to it is the correction.
 
 ## The authoring story
 
-Three files, two import graphs, one word at the call site.
+Three files, two import graphs, two reserved tags at the call site.
 
 **The contract** — imported by the server, never by the island:
 
@@ -68,11 +81,20 @@ export function ColorPicker(props: {
 **The call site** — a hole in a server template:
 
 ```ts
-${ColorPicker.mount({
-  value: card.color,
-  swatches: [...SWATCHES],
-  onChange: (color) => cards.setColor(card.id, color),
-})}
+<mount
+  .Island=${ColorPicker}
+  .value=${card.color}
+  .swatches=${[...SWATCHES]}
+  .onChange=${(color) => cards.setColor(card.id, color)}
+></mount>
+
+<mount .Island=${AssigneePicker} .label=${assignee.name}>
+  <slot>
+    ${keyed(people, (p) => p.id, (p) => html`
+      <button @click=${() => cards.assign(card.id, p.id)}>${p.name}</button>
+    `)}
+  </slot>
+</mount>
 ```
 
 `onChange` is a server closure over `cards` and `card`. It never becomes a
@@ -80,9 +102,15 @@ string. The island receives a stub; calling it sends `{ type: "island", event:
 "onChange", args: [color] }`. The handler table is the same idea as `@click`,
 keyed by event name instead of hole-as-handler.
 
+`<slot>` is not that. The people list never becomes a prop. The island
+places a well; the replica paints the tree; `assign` is an ordinary
+`@click` on the slot instance. The tags never reach the browser — they
+compile to `mount()` / `slot()` markers, and the interned strings the
+replica caches have a single island hole where `<mount>` was.
+
 That is the entire ceremony. There is no `"use client"`. There is no
-serializing a function by pretending it is a prop. There is no children slot
-through which a server tree is smuggled into a client component.
+serializing a function by pretending it is a prop. There is no children
+prop through which a server tree is smuggled into a client component.
 
 ### The rules that keep it from becoming RSC
 
@@ -90,21 +118,28 @@ RSC's confusion is that both sides are the same JSX, the boundary is a
 pragma, and children let a server tree hide inside a client tree. Each of
 those is refused here, on purpose.
 
-1. **Different wrappers.** A server component is called: `CardRow({ card })`.
-   An island is mounted: `ColorPicker.mount({ … })`. A reader can tell which
-   world they are in from the call, not from a file-level directive they
-   have to remember exists.
+1. **Different wrappers.** A server component is a function call, or a
+   PascalCase tag after `component.tag("CardRow", fn)`: `CardRow({ card })`
+   and `<CardRow .card=${card}>` are the same handle. An island is still
+   `<mount .Island=${ColorPicker} …>`. The catalog key is the string you
+   wrote, not a name scraped off the function. `component(fn)` stays
+   unregistered. Islands do not go in that table — a tag is never
+   ambiguous.
 2. **Different files, different graphs.** `*.island.tsx` is the only place
    `react` is imported. The server graph cannot reach those files. The
    island graph cannot reach `useStore`, `html`, or `component()`. The
    import graph *is* the architecture. A pragma is a wish; a folder is a
    wall.
-3. **No children.** An island receives JSON and callbacks. It does not
-   receive a server template, a component, or another island. Composition
-   across the boundary is done in the server template, side by side:
-   `${PrioritySelect.mount(…)} ${ColorPicker.mount(…)} <button @click=…>`.
-   The RSC power move — `<Client>{<Server/>}</Client>` — is the thing that
-   made the two worlds look like one, and it is the thing we do not do.
+3. **No children. A slot is a second tag.** An island's *props* are JSON
+   and callbacks. A template passed as a prop still throws. The hosted
+   region is `<slot>`, not children of `<mount>`, not `body: html\`…\``.
+   Markup or a hole directly inside `<mount>` throws. The island can only
+   place `<Slot />` on the React side, a well the replica paints. That is
+   loud at the call site on purpose:
+   `<mount .Island=${AssigneePicker}><slot>…</slot></mount>` cannot be
+   mistaken for `<AssigneePicker>{people}</AssigneePicker>`. The RSC power
+   move — `<Client>{<Server/>}</Client>` — is the thing that made the two
+   worlds look like one. A well the host cannot read is a different shape.
 4. **Callbacks are top-level.** `onChange` is a prop on the mount, not a
    function buried in a config object. The event table is flat. A nested
    function throws at serialize time with a path.
@@ -143,9 +178,26 @@ Two things that would have been a mistake, and that the shape prevents:
   `card` itself.
 - **Building the row menu from A3 instead of A2.** A dropdown whose items
   are server-rendered with server handlers is a gated subtree, not an
-  island. See the admin probe. Priority is an island because the *options*
-  are a closed enum and the *widget* needs a real overlay. Those are
-  different jobs.
+  island. See the admin probe. Assign uses a slot because the *chrome*
+  needs Radix (portal, focus trap) and the *body* is a live server region.
+  A menu that does not need a library overlay is still `gate().contains()`.
+  Those are different jobs.
+
+---
+
+## How a slot works from here
+
+The island file renders `<Slot />`. That is a custom element,
+`<socklit-slot data-instance data-hole>`, not a React child. The replica
+keeps a painter keyed by that address and calls `render(rehydrate(slot), el)`
+when the element connects — including after Radix portals it to
+`document.body`, where `island.querySelector` would miss it.
+
+A team-filter click is a normal `{ type: "event" }` on the slot instance,
+not `{ type: "island" }`. Diff treats the shell and the slot separately: a
+label change is a `set` on the island hole *without* `slot`; a list change
+is a patch on `${parent}/h${hole}/s`. The React tree is not remounted. Local
+`open` survives. That is the whole claim this increment exists to test.
 
 ---
 
@@ -163,7 +215,7 @@ portals to `document.body` and would miss a shadow tree anyway.
 There is no "Tailwind for the server" and "Tailwind for React." There is
 one utility language and two renderers. That is the honest version of
 "familiar tech stack" for styling: the ecosystem that is *strings* crosses
-for free; the ecosystem that is *components* crosses only at `.mount()`.
+for free; the ecosystem that is *components* crosses only at `<mount>`.
 
 ---
 
@@ -215,15 +267,18 @@ would make every date picker look like a warning label.
 ## What a reader should not conclude
 
 - **That the app is written in React.** Two files are. The board is
-  lit-html on the server. `.mount()` is the admission.
+  lit-html on the server. `<mount>` is the admission.
 - **That any npm component can be dropped into a server template.** Only
   ones registered as islands, with a JSON prop contract. MUI's `DatePicker`
   works the moment someone writes `DatePicker.island.tsx` and a contract;
   it does not work as `<DatePicker>` in a server file.
 - **That this replaces A2.** A gated menu whose items are server handlers
   is still the wrong thing to build as an island. This probe puts a closed
-  enum in Radix and leaves delete on the server to keep that distinction
-  visible.
+  enum in Radix, puts a Radix-hosted server list in a slot, and leaves
+  delete on the server to keep that distinction visible.
+- **That `<slot>` is children.** It is a well. The island does not receive
+  the tree as a value it can read. If the next person to touch this writes
+  `<mount .Island=${Picker}>${people}</mount>`, they have undone the point.
 - **That we measured cost.** This probe is about authoring. Bytes and
   CPU are the other probes' job; an island's first payload is the JSON
   props, which here is tens of bytes.
@@ -234,9 +289,12 @@ would make every date picker look like a warning label.
 
 | File | Role |
 | --- | --- |
-| `server/island.ts` | `defineIsland` / `.mount()` |
+| `server/island.ts` | `defineIsland` / `mount()` / `slot()` IR |
+| `server/island-markup.ts` | `<mount>` / `<slot>` / PascalCase compile |
+| `server/registry.ts` | `component.tag("Name", fn)` catalog for component tags |
 | `islands/*.ts` | contracts the server imports |
 | `islands/*.island.tsx` | React the client imports |
+| `islands/slot.tsx` | `<Slot />` well, client only |
 | `islands/registry.ts` | name → component, client only |
-| `client/island-host.ts` | `<socklit-island>` custom element |
+| `client/island-host.ts` | `<socklit-island>` / `<socklit-slot>` |
 | `server/probes/islands/` | this board |

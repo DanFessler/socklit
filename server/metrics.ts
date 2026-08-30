@@ -124,6 +124,8 @@ export function countNodes(instance: WireInstance): number {
       for (const item of value.items) {
         total += countNodes(item.instance);
       }
+    } else if (value.kind === "island" && value.slot) {
+      total += countNodes(value.slot);
     }
   }
 

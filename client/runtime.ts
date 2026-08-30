@@ -54,6 +54,9 @@ export class ClientRuntime {
     this.bridge = {
       send: options.send,
       revision: () => this.currentRevision,
+      paintSlot: (element, instance) => {
+        render(this.rehydrate(instance), element);
+      },
     };
   }
 
@@ -145,6 +148,27 @@ export class ClientRuntime {
         );
       }
 
+      // A shell-only island patch omits `slot` so the hosted tree survives
+      // a trigger-label change. Merge the existing slot back in.
+      if (
+        operation.op === "set" &&
+        isWireIslandValue(operation.value) &&
+        operation.value.slot === undefined
+      ) {
+        const current = target.values[operation.hole];
+        if (
+          current !== undefined &&
+          isWireIslandValue(current) &&
+          current.slot
+        ) {
+          target.values[operation.hole] = {
+            ...operation.value,
+            slot: current.slot,
+          };
+          continue;
+        }
+      }
+
       // `set` and `list` differ only in intent: one replaces a hole's value,
       // the other announces that a keyed sequence changed shape.
       target.values[operation.hole] = operation.value;
@@ -175,6 +199,8 @@ export class ClientRuntime {
         for (const item of value.items) {
           this.indexInstance(item.instance);
         }
+      } else if (isWireIslandValue(value) && value.slot) {
+        this.indexInstance(value.slot);
       }
     }
   }

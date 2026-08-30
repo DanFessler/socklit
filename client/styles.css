@@ -382,3 +382,30 @@ socklit-island::after {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
+/*
+ * The well inside an island. Often portaled to document.body with the
+ * overlay, so it cannot inherit the island box — it wears its own badge.
+ */
+socklit-slot {
+  display: block;
+  position: relative;
+  margin-top: 0.35rem;
+  border: 1px dashed color-mix(in oklab, #34d399 75%, transparent);
+  border-radius: 8px;
+  padding: 0.55rem 0.4rem 0.4rem;
+}
+
+socklit-slot::after {
+  content: "slot";
+  position: absolute;
+  top: -0.55rem;
+  right: 0.35rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: #34d399;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

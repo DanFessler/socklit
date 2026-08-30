@@ -1,5 +1,7 @@
 import type { TemplateResult } from "lit-html";
 
+import { bindTag } from "./registry";
+
 /**
  * Component scope, and state that belongs to a component rather than a session.
  *
@@ -171,21 +173,73 @@ export type ComponentOptions = {
   name?: string;
 };
 
+const COMPONENT_HANDLE = Symbol("socklit.componentHandle");
+
+/**
+ * The function `component()` returns. Calling it is the library spelling.
+ * `component.tag("CardRow", fn)` is what lets a template write the same
+ * thing as a tag.
+ */
+export type ComponentFactory<P extends object = Record<string, never>> = ((
+  props: P,
+) => ComponentMarker) & {
+  readonly [COMPONENT_HANDLE]: true;
+  readonly tag: string | undefined;
+};
+
 export function component<P extends object = Record<string, never>>(
   fn: ComponentFn<P>,
   options: ComponentOptions = {},
-): (props: P) => ComponentMarker {
-  const name = options.name ?? (fn.name.length > 0 ? fn.name : "anonymous");
+): ComponentFactory<P> {
+  return createComponent(fn, options, undefined);
+}
+
+/**
+ * Claims a PascalCase catalog name so a template may write `<CardRow>`.
+ * `component(fn)` stays unregistered. The string is the key, not a name
+ * scraped off `fn`.
+ */
+export namespace component {
+  export function tag<P extends object>(
+    name: string,
+    fn: ComponentFn<P>,
+    options: ComponentOptions = {},
+  ): ComponentFactory<P> {
+    return createComponent(fn, options, name);
+  }
+}
+
+function createComponent<P extends object>(
+  fn: ComponentFn<P>,
+  options: ComponentOptions,
+  tag: string | undefined,
+): ComponentFactory<P> {
+  const name =
+    options.name ?? tag ?? (fn.name.length > 0 ? fn.name : "anonymous");
   const erased = fn as ComponentFn<never>;
   const site: Site = { stateful: false };
 
-  return (props: P): ComponentMarker => ({
+  const handle = ((props: P): ComponentMarker => ({
     [COMPONENT]: true,
     fn: erased,
     props,
     name,
     site,
-  });
+  })) as ComponentFactory<P>;
+
+  Object.defineProperty(handle, COMPONENT_HANDLE, { value: true });
+  Object.defineProperty(handle, "tag", { value: tag });
+  if (tag !== undefined) bindTag(handle, tag);
+  return handle;
+}
+
+export function isComponentFactory(
+  value: unknown,
+): value is ComponentFactory<object> {
+  return (
+    typeof value === "function" &&
+    (value as { [COMPONENT_HANDLE]?: unknown })[COMPONENT_HANDLE] === true
+  );
 }
 
 export function isComponentMarker(value: unknown): value is ComponentMarker {

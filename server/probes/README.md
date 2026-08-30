@@ -84,7 +84,7 @@ to work around.
 
 - A hole may be a string, number, boolean, `null`, a nested `html` template, a
   `keyed()` list, an event handler, a `focusWhen()` request, or an
-  `island.mount()`. Everything else is rejected.
+  `mount()` / `<mount>`. Everything else is rejected.
 - `focusWhen(active)` must sit in element position, as in
   ``html`<div ${focusWhen(open)}>…</div>` ``, because the element it focuses is
   the one carrying the hole; anywhere else it throws in the browser. It is a

@@ -92,13 +92,15 @@ which searched for server-rendered *web frameworks* and therefore never looked
 at the Jupyter data-app ecosystem. It is the closest relative of the programming
 model, and on several rows it is not merely similar but the same design.
 
-**Reacton is a port of React, not an homage.** `@reacton.component` decorates a
-function; `use_state` returns a value and a setter; `use_effect` runs after
-commit and may return a cleanup; `use_context` and `provide_context` are the
-context pair; hooks are order-dependent and enforced with an internal counter,
-with the documentation giving the same no-conditionals rule for the same reason.
-Re-renders are triggered by a `use_state` setter or a `provide_context` call —
-which is, exactly, this runtime's "a setter or `session.invalidate()`."
+**Reacton is a port of React's programming model, not of React.**
+`@reacton.component` decorates a function; `use_state` returns a value and a
+setter; `use_effect` runs after commit and may return a cleanup; `use_context`
+and `provide_context` are the context pair; hooks are order-dependent and
+enforced with an internal counter, with the documentation giving the same
+no-conditionals rule for the same reason. Re-renders are triggered by a
+`use_state` setter or a `provide_context` call — which is, exactly, this
+runtime's "a setter or `session.invalidate()`." The renderer is not React.
+A Solara author does not import `react` and does not compose `<div>`s.
 
 **Solara runs it server-side.** A browser page gets a "virtual kernel" with an
 id, running in its own thread, and many kernels share a single OS process
@@ -131,18 +133,35 @@ larger than it first looks.** Reacton reconciles its element tree against *real
 ipywidget objects* and writes changed traits; ipywidgets then syncs those traits
 to the frontend. So there are two diffs in series, and neither is a template
 diff — there are no templates, and therefore nothing to intern. The reason
-Solara does not need statics-sent-once is that its statics are **npm packages
-already installed in the browser**: every widget is a JS view with a server-side
-model proxy.
+Solara does not need statics-sent-once is that its statics are **widget
+views already installed in the browser**: every control is a JS view with a
+server-side model proxy. Those views happen to be npm packages. They are
+not the npm a React web team means.
 
-That last point deserves more than a footnote, because it inverts a caveat this
-document makes below. Solara's authors did not give up their component
-ecosystem — ipyvuetify, bqplot, ipyleaflet, threejs all work — precisely
-*because* the unit of replication is a widget proxy rather than a template. A
-widget is a client island by construction, so client primitive coverage (A2/A3)
-is not an open problem there; it is the architecture. The npm sacrifice in "Two
-honest caveats" is a consequence of choosing templates and the DOM, not of
-server authority, and Solara is the proof.
+That last point inverts a caveat this document makes below, and it is easy
+to invert too far. Solara's authors did not give up *their* component
+ecosystem — ipyvuetify, bqplot, ipyleaflet, threejs all work — because the
+unit of replication is a widget proxy rather than a template. A widget is
+a client island by construction, so client primitive coverage (A2/A3) is
+not an open problem there; it is the architecture. They declined the DOM,
+which is how they declined the island. The catalog they kept is the Jupyter
+widget catalog. It is not Radix, MUI, or Recharts, and a Solara author
+cannot import those.
+
+The client is not a thin replica. It holds a model per widget. That is a
+different posture on what the client holds: application-shaped state lives
+on the machine as traits, not as interned layouts plus hole values. It is
+also why Solara cannot share a render across sessions the way this project
+means — there is no interned template, and the replica is per-kernel by
+construction.
+
+A TypeScript port of that protocol is a coherent product for data apps, and
+it is not this one. It would recreate Vaadin: the language the team already
+uses, a closed control set, and no date picker from npm. A TypeScript port
+that let you write the React a web team already uses would hit the first
+overlay and invent islands again. The npm sacrifice in "Two honest caveats"
+is the price of choosing templates and the DOM, not of server authority.
+Solara is the proof of that, not a design this project failed to adopt.
 
 **It has also built the lifetime tiers S4 says do not exist here.** A kernel
 survives WebSocket loss and resumes by id, with a 24-hour cull timeout tunable
@@ -155,11 +174,11 @@ require sticky sessions, since a kernel is pinned to the worker that created it
 endpoint reporting thread and kernel counts, which is the `/metrics` endpoint
 item 5 asks for, already specified by someone else.
 
-**What Solara does not do** is share renders across sessions, and its audience
-is data applications and notebooks rather than web products. The default
-renderer also walks the whole tree on every state update; an opt-in fast
-renderer that prunes to dirty subtrees exists as an unmerged pull request, which
-is worth reading against S3 but should not be cited as shipped behavior.
+The audience is data applications and notebooks rather than web products.
+The default renderer also walks the whole tree on every state update; an
+opt-in fast renderer that prunes to dirty subtrees exists as an unmerged
+pull request, which is worth reading against S3 but should not be cited as
+shipped behavior.
 
 ## Blazor Server
 
@@ -493,13 +512,12 @@ resolve, and it makes the client primitive library — already identified in
 `economics.md` finding 5 as the highest-leverage work in the system — the thing
 that decides whether this audience is reachable at all.
 
-Solara sharpens this caveat by showing it is not inherent. Its authors kept
-their entire component ecosystem under full server authority, because their unit
-of replication is a widget with a browser-side view and a server-side model
-proxy, which makes every component an island by construction. The ecosystem loss
-here is the price of choosing templates and the DOM, not the price of running on
-the server — so A3 is not a gap to be patched but the one architectural decision
-this project has deferred and Solara did not.
+Solara sharpens this caveat by showing the loss is not inherent to server
+authority. They kept the Jupyter widget catalog by making every control an
+island. That is not the catalog this audience means, and a Node port of
+the protocol would not make it so. The ecosystem loss here is the price of
+choosing templates and the DOM — so A3 is not a gap to be patched but the
+bill for that choice, which Solara never incurred.
 
 ### So what is the case for continuing
 

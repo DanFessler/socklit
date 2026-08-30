@@ -65,6 +65,12 @@ export type WireIslandValue = {
   name: string;
   props: { [key: string]: WireJson };
   events: string[];
+  /**
+   * A server-rendered region the island hosts. The replica paints it into
+   * a `<socklit-slot>` the React tree placed. Omitted when the island is
+   * terminal — a date picker, not a dialog.
+   */
+  slot?: WireInstance;
 };
 
 /**

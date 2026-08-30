@@ -3,6 +3,7 @@ import type { TemplateResult } from "lit-html";
 import type {
   EventPayload,
   WireInstance,
+  WireIslandValue,
   WireJson,
   WireListItem,
   WireTemplate,
@@ -15,7 +16,13 @@ import {
   type RenderOutput,
 } from "./component";
 import { isFocusRequest } from "./focus";
-import { islandPropJson, isIslandMount, type IslandMount } from "./island";
+import {
+  islandPropJson,
+  isIslandMount,
+  isSlotWell,
+  type IslandMount,
+} from "./island";
+import { compileIslandMarkup } from "./island-markup";
 import { escapeKey, isKeyedList } from "./keyed";
 import type { SessionHandle } from "./session";
 
@@ -232,6 +239,12 @@ export class AddressBook {
     return this.descend(list, key, () => `${list.id}/k:${escapeKey(key)}`);
   }
 
+  /** The slot address `${parent}/h${hole}/s` — server tree inside an island. */
+  slot(parent: AddressNode, hole: number): AddressNode {
+    const at = this.hole(parent, hole);
+    return this.descend(at, "s", () => `${at.id}/s`);
+  }
+
   private descend(
     parent: AddressNode,
     part: string | number,
@@ -359,6 +372,12 @@ function serializeInstance(
   walk: Walk,
 ): WireInstance {
   assertHtmlResult(result, at.id);
+  const compiled = compileIslandMarkup(result);
+  if (isComponentMarker(compiled)) {
+    return serializeRenderable(compiled, at, walk);
+  }
+  result = compiled;
+  assertHtmlResult(result, at.id);
 
   const templateId = walk.registry.intern(result.strings);
   walk.usedTemplateIds.add(templateId);
@@ -388,6 +407,12 @@ function serializeValue(
 
   if (isIslandMount(value)) {
     return serializeIsland(value, at, hole, walk);
+  }
+
+  if (isSlotWell(value)) {
+    throw new SerializeError(
+      `${describeHole(at.id, hole)} is a slot() without mount(). slot() marks a well for an island; it is not a hole of its own.`,
+    );
   }
 
   if (
@@ -449,7 +474,7 @@ function serializeValue(
   }
 
   throw new SerializeError(
-    `${describeHole(at.id, hole)} is an unsupported ${typeof value} value. Supported holes: string, number, boolean, null, nested html template, component, keyed list, event handler, focusWhen() request, island.mount().`,
+    `${describeHole(at.id, hole)} is an unsupported ${typeof value} value. Supported holes: string, number, boolean, null, nested html template, component, keyed list, event handler, focusWhen() request, mount(Island, props).`,
   );
 }
 
@@ -496,7 +521,22 @@ function serializeIsland(
     holes.set(hole, eventMap);
   }
 
-  return { kind: "island", name: mount.name, props, events };
+  const island: WireIslandValue = {
+    kind: "island",
+    name: mount.name,
+    props,
+    events,
+  };
+
+  if (mount.slotted !== undefined) {
+    island.slot = serializeRenderable(
+      mount.slotted,
+      walk.addresses.slot(at, hole),
+      walk,
+    );
+  }
+
+  return island;
 }
 
 export function isTemplateResult(value: unknown): value is TemplateResult {

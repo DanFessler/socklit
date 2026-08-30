@@ -1,7 +1,7 @@
 import { html } from "lit-html";
 import { describe, expect, it } from "vitest";
 
-import { defineIsland } from "../server/island";
+import { defineIsland, IslandError, mount, slot } from "../server/island";
 import { diff } from "../server/diff";
 import {
   SerializeError,
@@ -10,6 +10,8 @@ import {
 } from "../server/serialize";
 import { ColorPicker } from "../islands/color-picker";
 import { component } from "../server/component";
+import { keyed } from "../server/keyed";
+import { countNodes } from "../server/metrics";
 import type { SessionHandle } from "../server/session";
 import type { WireIslandValue } from "../shared/protocol";
 
@@ -46,7 +48,7 @@ describe("serialize islands", () => {
     const registry = new TemplateRegistry();
     const { root, handlers, islandHandlers } = serialize(
       html`<div>
-        ${Picker.mount({
+        ${mount(Picker, {
           value: "#a78bfa",
           swatches: ["#a78bfa", "#7dd3fc"],
           onChange: (color) => color,
@@ -69,7 +71,7 @@ describe("serialize islands", () => {
 
   it("never places a function in the serialized tree", () => {
     const { root } = serialize(
-      html`${ColorPicker.mount({
+      html`${mount(ColorPicker, {
         value: "#fff",
         swatches: ["#fff"],
         onChange: () => "nope",
@@ -87,7 +89,7 @@ describe("serialize islands", () => {
   it("invokes the closure with the arguments the island sent", () => {
     const seen: string[] = [];
     const { islandHandlers } = serialize(
-      html`${Picker.mount({
+      html`${mount(Picker, {
         value: "x",
         swatches: ["x"],
         onChange: (color) => {
@@ -109,7 +111,7 @@ describe("serialize islands", () => {
 
     expect(() =>
       serialize(
-        html`${Picker.mount({
+        html`${mount(Picker, {
           value: new Date("2024-01-01") as unknown as string,
           swatches: [],
           onChange: () => undefined,
@@ -120,7 +122,7 @@ describe("serialize islands", () => {
 
     expect(() =>
       serialize(
-        html`${Picker.mount({
+        html`${mount(Picker, {
           value: "x",
           swatches: [],
           onChange: () => undefined,
@@ -132,10 +134,29 @@ describe("serialize islands", () => {
     ).toThrow(/nested function/);
   });
 
+  it("refuses slot() in a hole without mount()", () => {
+    expect(() =>
+      serialize(html`${slot(html`<span>x</span>`)}`, new TemplateRegistry()),
+    ).toThrow(/without mount/);
+  });
+
+  it("refuses slot() passed as a prop", () => {
+    expect(() =>
+      serialize(
+        html`${mount(Picker, {
+          value: slot(html`<span>x</span>`) as unknown as string,
+          swatches: [],
+          onChange: () => undefined,
+        })}`,
+        new TemplateRegistry(),
+      ),
+    ).toThrow(/slot\(\)/);
+  });
+
   it("rejects a server template passed as a prop", () => {
     expect(() =>
       serialize(
-        html`${Picker.mount({
+        html`${mount(Picker, {
           value: html`<span>nope</span>` as unknown as string,
           swatches: [],
           onChange: () => undefined,
@@ -145,10 +166,35 @@ describe("serialize islands", () => {
     ).toThrow(/server render value/);
   });
 
+  it("serializes slot() as a hosted instance, not a prop", () => {
+    const Panel = defineIsland<{ label: string }>("Panel");
+    const { root, handlers } = serialize(
+      html`${mount(
+        Panel,
+        { label: "Assign" },
+        slot(html`
+        <button @click=${() => "dana"}>Dana</button>
+      `),
+      )}`,
+      new TemplateRegistry(),
+    );
+
+    const island = islandHole(root.values[0]);
+    expect(island.props).toEqual({ label: "Assign" });
+    expect(island.slot?.id).toBe("root/h0/s");
+    expect(JSON.stringify(island.props)).not.toContain("Dana");
+    expect(
+      handlers.get("root/h0/s")?.get(0)?.(
+        { kind: "click" },
+        actingSession(),
+      ),
+    ).toBe("dana");
+  });
+
   it("can sit in a component hole without changing the parent address", () => {
     const Row = component(function Row() {
       return html`<li>
-        ${Picker.mount({
+        ${mount(Picker, {
           value: "a",
           swatches: ["a"],
           onChange: () => undefined,
@@ -165,7 +211,7 @@ describe("serialize islands", () => {
 describe("diff islands", () => {
   const view = (value: string) =>
     serialize(
-      html`${Picker.mount({
+      html`${mount(Picker, {
         value,
         swatches: ["a", "b"],
         onChange: () => undefined,
@@ -188,5 +234,127 @@ describe("diff islands", () => {
       },
     ]);
     expect(diff(view("a"), view("a"))).toEqual([]);
+  });
+
+  const Panel = defineIsland<{ label: string }>("Panel");
+  const slotted = (label: string, names: string[]) =>
+    serialize(
+      html`${mount(
+        Panel,
+        { label },
+        slot(html`
+        ${keyed(names, (name) => name, (name) => html`<span>${name}</span>`)}
+      `),
+      )}`,
+      new TemplateRegistry(),
+    ).root;
+
+  it("patches the slot without replacing the island when only the hosted tree changes", () => {
+    const operations = diff(slotted("Assign", ["Dana"]), slotted("Assign", ["Omar"]));
+    expect(operations.some((operation) => operation.instanceId === "root")).toBe(
+      false,
+    );
+    expect(operations.length).toBeGreaterThan(0);
+    expect(operations.every((operation) => operation.instanceId === "root/h0/s")).toBe(
+      true,
+    );
+  });
+
+  it("omits the slot from a shell-only island set", () => {
+    expect(diff(slotted("Assign", ["Dana"]), slotted("Owner", ["Dana"]))).toEqual([
+      {
+        op: "set",
+        instanceId: "root",
+        hole: 0,
+        value: {
+          kind: "island",
+          name: "Panel",
+          props: { label: "Owner" },
+          events: [],
+        },
+      },
+    ]);
+  });
+
+  it("counts hosted slot nodes", () => {
+    const bare = serialize(
+      html`${mount(Panel, { label: "A" })}`,
+      new TemplateRegistry(),
+    ).root;
+    const hosted = slotted("A", ["Dana"]);
+    expect(countNodes(hosted)).toBeGreaterThan(countNodes(bare));
+  });
+});
+
+describe("mount and slot as template elements", () => {
+  const view = (value: string) =>
+    html`<li>
+      <mount
+        .Island=${Picker}
+        .value=${value}
+        .swatches=${["a", "b"]}
+        .onChange=${() => undefined}
+      ></mount>
+    </li>`;
+
+  it("compiles <mount> into an island hole and keeps the surrounding markup", () => {
+    const { root } = serialize(view("high"), new TemplateRegistry());
+    expect(islandHole(root.values[0])).toEqual({
+      kind: "island",
+      name: "Picker",
+      props: { value: "high", swatches: ["a", "b"] },
+      events: ["onChange"],
+    });
+    expect(JSON.stringify(root)).not.toContain("<mount");
+  });
+
+  it("interns the rewritten strings, not the authoring strings", () => {
+    const registry = new TemplateRegistry();
+    const first = serialize(view("a"), registry);
+    const second = serialize(view("b"), registry);
+    expect(second.root.templateId).toBe(first.root.templateId);
+    expect(registry.definition(first.root.templateId).strings.join("")).not.toContain(
+      "<mount",
+    );
+  });
+
+  it("hosts <slot> as a server tree, not as a prop", () => {
+    const Panel = defineIsland<{ label: string }>("Panel");
+    const { root, handlers } = serialize(
+      html`<mount .Island=${Panel} .label=${"Assign"}>
+        <slot>
+          <button @click=${() => "dana"}>Dana</button>
+        </slot>
+      </mount>`,
+      new TemplateRegistry(),
+    );
+
+    const island = islandHole(root.values[0]);
+    expect(island.props).toEqual({ label: "Assign" });
+    expect(island.slot).toBeDefined();
+    expect(JSON.stringify(island.props)).not.toContain("Dana");
+    expect(
+      handlers.get(island.slot?.id ?? "")?.get(0)?.(
+        { kind: "click" },
+        actingSession(),
+      ),
+    ).toBe("dana");
+  });
+
+  it("refuses children of <mount> that are not a <slot>", () => {
+    expect(() =>
+      serialize(
+        html`<mount .Island=${Picker} .value=${"a"} .swatches=${[]} .onChange=${() => {}}>
+          <button>nope</button>
+        </mount>`,
+        new TemplateRegistry(),
+      ),
+    ).toThrow(IslandError);
+  });
+
+  it("refuses a bare <slot>", () => {
+    expect(() =>
+      serialize(html`<slot>${"x"}</slot>`, new TemplateRegistry()),
+    ).toThrow(/<slot>/);
   });
 });

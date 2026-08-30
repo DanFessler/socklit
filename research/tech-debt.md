@@ -237,6 +237,72 @@ answered.
 
 ---
 
+## Component tags
+
+Built with the islands authoring increment: `component.tag("CardRow", fn)`
+puts a PascalCase name in a process-wide catalog so a lit-html template can
+write `<CardRow .card=${card}>`. `component(fn)` stays unregistered. Lookup
+happens at apply time. A tag that is the whole template unwraps to the same
+marker as the function call, so keyed addresses match. Islands are refused.
+
+### The tag is a string, so the consumer is untyped
+
+**What was built.** The function form is an identifier. `CardRow({ card })`
+type-checks props, renames, and go-to-definition. The tag form is markup
+inside `html\`…\``. TypeScript type-checks the `${…}` holes and treats the
+element as text. A missing `.cards`, a typo `<Cardrow>`, a `.card=${12}` —
+the language cannot see them. The unused `const CardRow` some authors will
+want to keep does not fix this: the binding is not what the tag closed over.
+
+**Why it is safe today.** The tagged sites are two demo rows (`TodoRow`,
+`CardRow`) and a unit file that serializes both spellings and asserts they
+are the same tree. A wrong prop still throws at serialize or fails a probe
+test. Nobody is consuming a third-party tagged component from a string.
+
+**What makes it wrong.** A catalog other people import. The consumer of
+`<CardRow>` is exactly who wants "prop missing or wrong" at the element,
+and they are the ones the string cannot help.
+
+**What retires it.** One of two product paths, not a smarter `html` generic
+and not `HTMLElementTagNameMap` (CardRow is not a DOM element).
+
+1. **Server JSX.** `<CardRow card={card} />` is an identifier. The
+   transform already described in `proposal.md`'s appendix emits
+   `CardRow({ card })`. That restores lint without a plugin. It also
+   upgrades the older "JSX is marketing" line: once tags exist, JSX is
+   how the pretty spelling becomes typed. Keep the wall — `<CardRow>`
+   is a server component, `<mount Island={ColorPicker}>` is an island.
+2. **A TypeScript language plugin.** Diagnostics on spans *inside* the
+   template string, the way `ts-lit-plugin` already underlines an unknown
+   attribute on a custom element. Unknown tag, missing required prop,
+   wrong hole type, autocomplete after `.`. Stock `ts-lit-plugin` is the
+   wrong shape (kebab-case HTMLElement classes). A Socklit plugin would
+   walk the same tags `island-markup.ts` walks, with the props type from
+   `component.tag("CardRow", fn)`. That is a checker the product then owns.
+
+Until one of those ships, the dual API is **typed versus catalogued**, not
+two spellings of the same thing. Call the function when the checker
+matters. Do not keep a dummy const to soothe unused-var.
+
+### The catalog is process-wide
+
+**What was built.** One `Map` from tag string to handle. The string is the
+one passed to `component.tag()`, not `fn.name`, so two `function AccountRow`s
+can coexist until one of them claims `<AccountRow>`. A second claim throws.
+
+**Why it is safe today.** All probes load in one process, and only two
+components are tagged, with distinct names. Tests that need a tag pick
+names like `TagBox`.
+
+**What makes it wrong.** Two apps, or two packages, that both want
+`<Row>`. A product wants the table per app (or per module graph), not per
+process.
+
+**Cost of retiring it later rather than now.** Low. `lookupComponent` is
+one call site; the change is which map it reads.
+
+---
+
 *Design rationale for all of the above is in [`proposal.md`](proposal.md).
 Measurements are in [`design-probes.md`](design-probes.md) and the per-probe
 documents under [`probes/`](probes/).*

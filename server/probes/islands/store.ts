@@ -12,12 +12,39 @@ export const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
   { value: "urgent", label: "Urgent" },
 ];
 
+export const TEAMS = ["west", "east", "eu"] as const;
+export type Team = (typeof TEAMS)[number];
+
+export const TEAM_LABEL: Record<Team, string> = {
+  west: "West",
+  east: "East",
+  eu: "EU",
+};
+
+export type Person = {
+  id: string;
+  name: string;
+  role: string;
+  team: Team;
+};
+
+export const PEOPLE: Person[] = [
+  { id: "dana", name: "Dana", role: "Staff", team: "west" },
+  { id: "omar", name: "Omar", role: "Senior", team: "west" },
+  { id: "ravi", name: "Ravi", role: "Lead", team: "east" },
+  { id: "mei", name: "Mei", role: "Staff", team: "east" },
+  { id: "luca", name: "Luca", role: "Senior", team: "eu" },
+  { id: "nina", name: "Nina", role: "Lead", team: "eu" },
+];
+
 export type Card = {
   id: string;
   title: string;
   done: boolean;
   priority: Priority;
   color: string;
+  team: Team;
+  assigneeId: string;
 };
 
 const COLOR = /^#[0-9a-fA-F]{6}$/;
@@ -42,6 +69,17 @@ export class CardStore {
     return this.store.state.map((card) => ({ ...card }));
   }
 
+  peopleOn(team: Team): Person[] {
+    return PEOPLE.filter((person) => person.team === team).map((person) => ({
+      ...person,
+    }));
+  }
+
+  person(id: string): Person | undefined {
+    const person = PEOPLE.find((candidate) => candidate.id === id);
+    return person ? { ...person } : undefined;
+  }
+
   add(title: string): Promise<Card> {
     return this.store.mutate((cards) => {
       const card: Card = {
@@ -50,6 +88,8 @@ export class CardStore {
         done: false,
         priority: "medium",
         color: "#a78bfa",
+        team: "west",
+        assigneeId: "dana",
       };
       return { next: [...cards, card], result: card };
     });
@@ -72,6 +112,38 @@ export class CardStore {
       const current = requireCard(cards, id);
       if (current.priority === priority) return { next: cards, result: current };
       const updated = { ...current, priority };
+      return { next: replace(cards, id, updated), result: updated };
+    });
+  }
+
+  setTeam(id: string, team: string): Promise<Card> {
+    if (!isTeam(team)) {
+      throw new StoreError(`unknown team: ${team}`);
+    }
+    return this.store.mutate((cards) => {
+      const current = requireCard(cards, id);
+      if (current.team === team) return { next: cards, result: current };
+      const eligible = PEOPLE.filter((person) => person.team === team);
+      const assigneeId = eligible.some((person) => person.id === current.assigneeId)
+        ? current.assigneeId
+        : (eligible[0]?.id ?? current.assigneeId);
+      const updated = { ...current, team, assigneeId };
+      return { next: replace(cards, id, updated), result: updated };
+    });
+  }
+
+  assign(id: string, assigneeId: string): Promise<Card> {
+    const person = PEOPLE.find((candidate) => candidate.id === assigneeId);
+    if (!person) {
+      throw new StoreError(`unknown person: ${assigneeId}`);
+    }
+    return this.store.mutate((cards) => {
+      const current = requireCard(cards, id);
+      if (person.team !== current.team) {
+        throw new StoreError(`${person.name} is not on the ${current.team} team`);
+      }
+      if (current.assigneeId === assigneeId) return { next: cards, result: current };
+      const updated = { ...current, assigneeId };
       return { next: replace(cards, id, updated), result: updated };
     });
   }
@@ -114,6 +186,8 @@ function seed(): Card[] {
       done: false,
       priority: "high",
       color: "#a78bfa",
+      team: "west",
+      assigneeId: "dana",
     },
     {
       id: "write-note",
@@ -121,6 +195,8 @@ function seed(): Card[] {
       done: false,
       priority: "medium",
       color: "#7dd3fc",
+      team: "east",
+      assigneeId: "ravi",
     },
     {
       id: "row-actions",
@@ -128,6 +204,8 @@ function seed(): Card[] {
       done: true,
       priority: "urgent",
       color: "#fb7185",
+      team: "eu",
+      assigneeId: "nina",
     },
   ];
 }
@@ -136,20 +214,46 @@ function parseCards(raw: unknown, file: string): Card[] {
   if (!Array.isArray(raw)) {
     throw new Error(`malformed cards file: ${file}`);
   }
-  return raw.filter(isCard);
+  return raw.flatMap((value) => {
+    const card = readCard(value);
+    return card ? [card] : [];
+  });
 }
 
-function isCard(value: unknown): value is Card {
-  if (typeof value !== "object" || value === null) return false;
+function readCard(value: unknown): Card | null {
+  if (typeof value !== "object" || value === null) return null;
   const card = value as Partial<Card>;
-  return (
-    typeof card.id === "string" &&
-    typeof card.title === "string" &&
-    typeof card.done === "boolean" &&
-    isPriority(card.priority) &&
-    typeof card.color === "string" &&
-    COLOR.test(card.color)
-  );
+  if (
+    typeof card.id !== "string" ||
+    typeof card.title !== "string" ||
+    typeof card.done !== "boolean" ||
+    !isPriority(card.priority) ||
+    typeof card.color !== "string" ||
+    !COLOR.test(card.color)
+  ) {
+    return null;
+  }
+
+  const team = isTeam(card.team) ? card.team : "west";
+  const assigneeId =
+    typeof card.assigneeId === "string" &&
+    PEOPLE.some((person) => person.id === card.assigneeId && person.team === team)
+      ? card.assigneeId
+      : (PEOPLE.find((person) => person.team === team)?.id ?? "dana");
+
+  return {
+    id: card.id,
+    title: card.title,
+    done: card.done,
+    priority: card.priority,
+    color: card.color,
+    team,
+    assigneeId,
+  };
+}
+
+function isTeam(value: unknown): value is Team {
+  return typeof value === "string" && (TEAMS as readonly string[]).includes(value);
 }
 
 function isPriority(value: unknown): value is Priority {

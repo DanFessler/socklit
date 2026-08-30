@@ -2,8 +2,10 @@ import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
 import { islandComponents } from "../islands/registry";
+import { IslandAddressContext } from "../islands/slot";
 import type {
   ClientMessage,
+  WireInstance,
   WireIslandValue,
   WireJson,
 } from "../shared/protocol";
@@ -11,6 +13,7 @@ import type {
 export type IslandBridge = {
   send: (message: ClientMessage) => void;
   revision: () => number;
+  paintSlot: (element: HTMLElement, instance: WireInstance) => void;
 };
 
 export type IslandSpec = {
@@ -19,16 +22,19 @@ export type IslandSpec = {
   value: WireIslandValue;
 };
 
+const painters = new Map<string, (element: HTMLElement) => void>();
+
+function slotKey(instanceId: string, hole: number): string {
+  return `${instanceId}#${hole}`;
+}
+
 /**
  * The DOM host for one island hole.
  *
  * lit-html owns this element the way it owns any other hole. React owns
- * everything *inside* it. Disconnecting the element (a snapshot resync, a
- * keyed row leaving) unmounts the React tree, so island state dies with the
- * hole — which is what "the server still owns the tree" means here.
- *
- * No shadow root: Tailwind classes on the island and Radix portals on
- * `document.body` both need the document stylesheet.
+ * everything *inside* it. A `<socklit-slot>` placed by the React tree is
+ * claimed back by the replica — including when Radix portals it to
+ * `document.body`.
  */
 class SocklitIsland extends HTMLElement {
   #bridge: IslandBridge | null = null;
@@ -58,6 +64,9 @@ class SocklitIsland extends HTMLElement {
   }
 
   disconnectedCallback(): void {
+    if (this.#spec) {
+      painters.delete(slotKey(this.#spec.instanceId, this.#spec.hole));
+    }
     this.#root?.unmount();
     this.#root = null;
   }
@@ -65,7 +74,7 @@ class SocklitIsland extends HTMLElement {
   #sync(): void {
     if (!this.isConnected || !this.#bridge || !this.#spec) return;
 
-    const { value } = this.#spec;
+    const { instanceId, hole, value } = this.#spec;
     const Component = islandComponents[value.name];
     if (!Component) {
       this.textContent = `unknown island: ${value.name}`;
@@ -93,8 +102,49 @@ class SocklitIsland extends HTMLElement {
       };
     }
 
+    const key = slotKey(instanceId, hole);
+    if (value.slot && this.#bridge) {
+      const bridge = this.#bridge;
+      const instance = value.slot;
+      painters.set(key, (element) => bridge.paintSlot(element, instance));
+    } else {
+      painters.delete(key);
+    }
+
+    // Register the painter before render so a slot that mounts during this
+    // commit can claim itself from connectedCallback. Paint afterwards so
+    // a React update cannot leave the well empty — React owns the custom
+    // element, the replica owns what is inside it.
     this.#root ??= createRoot(this);
-    this.#root.render(createElement(Component, props));
+    this.#root.render(
+      createElement(
+        IslandAddressContext.Provider,
+        { value: { instanceId, hole } },
+        createElement(Component, props),
+      ),
+    );
+
+    const paint = painters.get(key);
+    if (paint) {
+      for (const element of document.querySelectorAll("socklit-slot")) {
+        if (
+          element instanceof HTMLElement &&
+          element.dataset["instance"] === instanceId &&
+          element.dataset["hole"] === String(hole)
+        ) {
+          paint(element);
+        }
+      }
+    }
+  }
+}
+
+class SocklitSlot extends HTMLElement {
+  connectedCallback(): void {
+    const instanceId = this.dataset["instance"];
+    const hole = this.dataset["hole"];
+    if (instanceId === undefined || hole === undefined) return;
+    painters.get(slotKey(instanceId, Number(hole)))?.(this);
   }
 }
 
@@ -109,4 +159,7 @@ function encodeArgs(args: unknown[]): WireJson[] | null {
 
 if (!customElements.get("socklit-island")) {
   customElements.define("socklit-island", SocklitIsland);
+}
+if (!customElements.get("socklit-slot")) {
+  customElements.define("socklit-slot", SocklitSlot);
 }

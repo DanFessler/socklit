@@ -1,23 +1,28 @@
 import { MAX_JSON_DEPTH, type WireJson } from "../shared/protocol";
-import { isComponentMarker } from "./component";
+import {
+  isComponentMarker,
+  type RenderOutput,
+} from "./component";
 import { isFocusRequest } from "./focus";
 import { isKeyedList } from "./keyed";
 
 /**
- * The server half of an island: a named contract and a `.mount()` that
- * occupies a template hole.
+ * The server half of an island: a named contract, and two reserved
+ * elements — `<mount>` and `<slot>` — that compile down to `mount()` /
+ * `slot()` markers.
  *
- * This is the whole authoring tell. A server component is called as a
- * function and returns markup. An island is *mounted*, and what it returns
- * is a marker the serializer turns into `{ kind: "island" }`. The two
- * cannot be confused at a call site, which is the point — RSC's problem is
- * that both sides are the same JSX.
+ * That is the authoring tell. A server component is called as a function,
+ * or written as a tag after `component.tag("Name", fn)`. An island
+ * is a `<mount>`. A hosted region is a `<slot>`, not a child. RSC's
+ * problem is that both sides are the same JSX.
  *
  * The React implementation lives in `*.island.tsx` and is imported only by
  * the client registry. This file never imports `react`.
  */
 
 const ISLAND = Symbol("socklit.island");
+const HANDLE = Symbol("socklit.islandHandle");
+const WELL = Symbol("socklit.slot");
 
 const NAME_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
 const MAX_NAME = 64;
@@ -30,14 +35,21 @@ export type IslandMount = {
   readonly [ISLAND]: true;
   readonly name: string;
   readonly props: Record<string, unknown>;
+  /** Server tree the replica keeps painting; not a React child. */
+  readonly slotted?: RenderOutput;
 };
 
 export type IslandHandle<
   P extends Record<string, WireJson>,
   E extends IslandEvents,
 > = {
+  readonly [HANDLE]: true;
   readonly name: string;
-  mount(props: P & E): IslandMount;
+};
+
+export type SlotWell = {
+  readonly [WELL]: true;
+  readonly content: RenderOutput;
 };
 
 export class IslandError extends Error {
@@ -50,13 +62,13 @@ export class IslandError extends Error {
 /**
  * Declares a client widget the server may place, and nothing else.
  *
- * `P` is JSON. `E` is callbacks. Both are enforced at the `.mount()` call
+ * `P` is JSON. `E` is callbacks. Both are enforced at the `mount()` call
  * by TypeScript, and again at serialize time for anything types missed —
  * a `Date`, a class instance, a nested function, a template.
  */
 export function defineIsland<
   P extends Record<string, WireJson>,
-  E extends IslandEvents = Record<string, never>,
+  E extends IslandEvents = Record<never, never>,
 >(name: string): IslandHandle<P, E> {
   if (!NAME_PATTERN.test(name) || name.length > MAX_NAME) {
     throw new IslandError(
@@ -64,12 +76,36 @@ export function defineIsland<
     );
   }
 
+  return { [HANDLE]: true, name };
+}
+
+/**
+ * Places an island in a hole. The handle is the contract; the props are
+ * JSON plus top-level callbacks. A hosted server tree is a third
+ * argument, and it must be `slot(...)`, not a bare template.
+ */
+export function mount<
+  P extends Record<string, WireJson>,
+  E extends IslandEvents,
+>(island: IslandHandle<P, E>, props: P & E, well?: SlotWell): IslandMount {
+  if (!isIslandHandle(island)) {
+    throw new IslandError("mount() expected an island from defineIsland()");
+  }
+
   return {
-    name,
-    mount(props: P & E): IslandMount {
-      return { [ISLAND]: true, name, props };
-    },
+    [ISLAND]: true,
+    name: island.name,
+    props,
+    ...(well === undefined ? {} : { slotted: well.content }),
   };
+}
+
+/**
+ * Marks a server tree as a well for `mount()`, not as a child and not as
+ * a prop. The island cannot read it. The replica paints it.
+ */
+export function slot(content: RenderOutput): SlotWell {
+  return { [WELL]: true, content };
 }
 
 export function isIslandMount(value: unknown): value is IslandMount {
@@ -77,6 +113,24 @@ export function isIslandMount(value: unknown): value is IslandMount {
     typeof value === "object" &&
     value !== null &&
     (value as Partial<IslandMount>)[ISLAND] === true
+  );
+}
+
+export function isIslandHandle(
+  value: unknown,
+): value is IslandHandle<Record<string, WireJson>, IslandEvents> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { [HANDLE]?: unknown })[HANDLE] === true
+  );
+}
+
+export function isSlotWell(value: unknown): value is SlotWell {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { [WELL]?: unknown })[WELL] === true
   );
 }
 
@@ -101,9 +155,14 @@ export function islandPropJson(
       `${path} is a nested function. Island callbacks must be top-level props, not buried in an object`,
     );
   }
-  if (isIslandMount(value)) {
+  if (isIslandMount(value) || isIslandHandle(value)) {
     return fail(
       `${path} is another island. Islands cannot nest; compose them in the server template instead`,
+    );
+  }
+  if (isSlotWell(value)) {
+    return fail(
+      `${path} is a slot(). Pass it as mount(Island, props, slot(...)), not as a prop`,
     );
   }
   if (isServerRenderValue(value)) {
