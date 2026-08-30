@@ -1,0 +1,60 @@
+.desk-who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.desk-signed {
+  margin: 0;
+}
+
+.desk-signin {
+  margin-top: 0.5rem;
+}
+
+.desk-label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.desk-guest,
+.desk-flash {
+  margin: 0 0 1rem;
+}
+
+.desk-flash {
+  color: #8a1f1f;
+}
+
+.desk-piece {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.desk-piece-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.desk-meta {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.desk-stamp {
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.desk-assign {
+  margin: 0;
+}

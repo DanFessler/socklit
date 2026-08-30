@@ -21,7 +21,13 @@ const Picker = defineIsland<
 >("Picker");
 
 function actingSession(id = "s1"): SessionHandle {
-  return { id, params: new URLSearchParams() };
+  return {
+    id,
+    params: new URLSearchParams(),
+    user: null,
+    grant() {},
+    revoke() {},
+  };
 }
 
 function islandHole(value: unknown): WireIslandValue {
@@ -104,6 +110,26 @@ describe("serialize islands", () => {
       actingSession("dana"),
     );
     expect(seen).toEqual(["red"]);
+  });
+
+  it("types the acting session after the island arguments", () => {
+    let seen: { color: string; id: string } | undefined;
+    const { islandHandlers } = serialize(
+      html`${mount(Picker, {
+        value: "x",
+        swatches: ["x"],
+        onChange: (color, session) => {
+          seen = { color, id: session.id };
+        },
+      })}`,
+      new TemplateRegistry(),
+    );
+
+    islandHandlers.get("root")?.get(0)?.get("onChange")?.(
+      "red",
+      actingSession("dana"),
+    );
+    expect(seen).toEqual({ color: "red", id: "dana" });
   });
 
   it("rejects a Date, a class instance, and a nested function", () => {

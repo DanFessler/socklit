@@ -11,9 +11,23 @@
  * sharing. A closure that reads the acting account from its arguments is
  * identical for every viewer and can be rendered once; a closure that captured
  * the account can only ever serve one.
+ *
+ * `user` is whatever `listen({ identify })` returned for this connection, or
+ * `null` if the tab is signed out. `params` is still the query string — use
+ * it for view config (`?mine=1`), not as a person.
  */
-export type SessionHandle = {
+export type SessionHandle<User = unknown> = {
   readonly id: string;
   /** Query parameters from the WebSocket URL, for per-session configuration. */
   readonly params: URLSearchParams;
+  /** Trusted identity from `identify`. `null` when unsigned or omitted. */
+  readonly user: User | null;
+  /**
+   * Give this browser a token. The replica POSTs `/session` (HttpOnly
+   * cookie on the page origin) and reconnects. Every tab in that browser
+   * is then the same person. The `?ws=` fallback still uses sessionStorage.
+   */
+  grant: (token: string) => void;
+  /** Drop the cookie (or the fallback token) and reconnect signed out. */
+  revoke: () => void;
 };

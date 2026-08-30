@@ -47,6 +47,8 @@ npm run typecheck
 
 ## Documentation
 
+- [`docs/getting-started.md`](docs/getting-started.md) — first app: `starter/`,
+  `socklit/server`, `listen()`. The product path.
 - [`docs/building-a-todo-app.md`](docs/building-a-todo-app.md) — a guided build.
   The most ordinary application possible, built with local component state, then
   persisted, then made multi-user, with each step turning out to cost less than

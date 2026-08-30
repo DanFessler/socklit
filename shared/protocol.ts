@@ -115,6 +115,14 @@ export type ServerErrorCode =
   | "handler_failed"
   | "render_failed";
 
+/**
+ * Cookie and query name for the opaque session token.
+ * `identify` reads the cookie first. The query string is the `?ws=` fallback.
+ * It is not a user id.
+ */
+export const SESSION_COOKIE = "socklit_session";
+export const SESSION_QUERY = SESSION_COOKIE;
+
 export type ServerMessage =
   | { type: "templates"; templates: WireTemplate[] }
   | { type: "snapshot"; revision: number; root: WireInstance }
@@ -129,6 +137,11 @@ export type ServerMessage =
       code: ServerErrorCode;
       message: string;
       recoverable: boolean;
+    }
+  | {
+      type: "credential";
+      /** Opaque token for `identify`. `null` signs this tab out. */
+      token: string | null;
     };
 
 export type ClickPayload = { kind: "click" };

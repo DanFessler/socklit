@@ -1,5 +1,8 @@
 node_modules/
 dist/
+starter/data/
+apps/feedback/data/
+apps/holds/data/
 *.tmp
 *.log
 .DS_Store

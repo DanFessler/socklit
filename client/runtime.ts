@@ -90,6 +90,9 @@ export class ClientRuntime {
       case "error":
         this.onError?.(message);
         return;
+
+      case "credential":
+        return;
     }
   }
 

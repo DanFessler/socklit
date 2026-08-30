@@ -30,7 +30,7 @@ export type ProbeContext = {
  * (a route, an open menu, a selected tab) becomes visible without disturbing
  * anyone else. Probes that hold no per-session state never need to call it.
  */
-export type SessionContext = SessionHandle & {
+export type SessionContext<User = unknown> = SessionHandle<User> & {
   invalidate: () => void;
 };
 

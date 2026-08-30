@@ -92,6 +92,9 @@ function describe(message: ServerMessage | ClientMessage): string {
 
     case "island":
       return `island ${message.event} ${message.instanceId}#${message.hole}`;
+
+    case "credential":
+      return message.token ? "credential set" : "credential cleared";
   }
 }
 

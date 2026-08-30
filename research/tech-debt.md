@@ -219,21 +219,21 @@ again. Retires when there is a browser test environment to move it into.
 
 ## Handler signature
 
-### `session.params` is standing in for identity
+### `session.params` is standing in for identity — **retired**
 
-**What was built.** Handlers receive a `SessionHandle` of `{ id, params }`, so a
-closure can resolve the acting user from its arguments instead of capturing it.
-That is what makes one closure correct for every viewer, and it is the piece all
-sharing work was waiting on.
+**What was built.** `listen({ identify })` returns a user the server
+computed. `grant` POSTs `/session`; the host sets an HttpOnly cookie
+on the page origin. Vite proxies `/ws` and `/session` so week one is
+one origin. `listen({ publicDir })` serves a built page next to the
+socket. Handlers still receive the acting session as an argument.
 
-**Why it is safe today.** It is a prototype and the query string is how every
-probe already configures itself.
+**What remains a shortcut.** The cookie value is the opaque string the
+app issued — unsigned, not a users table. `tsx watch` still wipes an
+in-memory `Map`. HTTPS is a reverse proxy, not `listen`. Authorization
+is still an authoring rule: re-check `session.user` at `mutate`.
 
-**What it is not.** An authorization model. A handler reading
-`session.params.get("user")` trusts a value the client chose. Nothing here should
-be read as a claim about authentication, and the open question of what a session
-*is* — `proposal.md` §4 and the durable-session work — is where that gets
-answered.
+**What it is not.** A users product. Durable *sessions* (`proposal.md`
+§4) are still unbuilt — a cookie restores the name, not the live tree.
 
 ---
 
@@ -300,6 +300,77 @@ process.
 
 **Cost of retiring it later rather than now.** Low. `lookupComponent` is
 one call site; the change is which map it reads.
+
+---
+
+## First-user product surface
+
+Found by a blind build ([`docs/first-user-experiment.md`](../docs/first-user-experiment.md)).
+The public API was enough to ship a shared fridge. These are the holes
+that builder hit, not guesses.
+
+### The starter does not contain the product’s actual first app
+
+**What was built.** `starter/` is a per-tab `useState` counter.
+`listen({ subscribe })` + `createJsonStore` lives only as a one-file
+example in `getting-started.md`.
+
+**Why it is safe today.** This is an experiment branch. The lab still
+boots the todo probe.
+
+**What makes it wrong.** A first user whose second tab does not match,
+because they never found the store split across `app.ts` / `server.ts`.
+
+**What retires it.** Put a tiny shared list in the starter. Keep the
+counter as a comment pointing at `useState` = this tab.
+
+### Rejected submits wipe the form, and native validation can skip the handler
+
+**What was built.** The replica paints the template. Unbound inputs keep
+their DOM value across a render (the todo add field). An input with
+`value="1"` snaps back. `@submit` never fires if the browser’s
+`required` / `min` blocks the submit.
+
+**Why it is safe today.** The fridge builder worked around it with
+`useState` flash messages and discovered the snap by using `value=`.
+
+**What makes it wrong.** Any form that validates on the server after the
+user has typed more than one field.
+
+**What retires it.** Document the unbound-input rule in getting-started.
+Decide whether rejected submits need a public draft helper, or whether
+“do not put `value=` on fields you want to keep” is the product. Say
+that `@submit` does not run when native constraint validation fails.
+
+### `mutate`’s `result` is cargo-culted
+
+**What was built.** `mutate` returns `{ next, result }`. The getting-
+started example always uses `result: undefined`.
+
+**Why it is safe today.** Ignoring `result` is correct for fire-and-forget
+handlers.
+
+**What retires it.** One sentence: `result` is the Promise value for the
+caller (`await store.mutate(…)`), not something the replica reads.
+
+### An app that installs React gets two copies of it
+
+**What was built.** The replica mounts islands with `react-dom`. The
+getting-started island path says `npm install react react-dom`. The
+starter depends on `socklit` via `file:`, so Vite resolves the host’s
+React from the package and the island’s React from the app.
+
+**Why it is safe today.** The lab client registers islands inside the
+same package as the host. First-user apps do not.
+
+**What makes it wrong.** The first `<mount>` is an invalid hook call.
+The page stays “connected.” The row still shows. The widget does not
+paint. A first user who followed the manual exactly hits this.
+
+**What retires it.** `react` / `react-dom` as peers of `socklit`, and
+the starter Vite config already `resolve.dedupe`s them. Put that next
+to the `npm install` snippet. A one-file example island would have
+caught this in the template instead of in anger.
 
 ---
 

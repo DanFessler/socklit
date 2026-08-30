@@ -4,6 +4,12 @@
   "private": true,
   "type": "module",
   "description": "Server-authoritative UI prototype: lit-html templates replicated over WebSockets",
+  "exports": {
+    "./server": "./server/public.ts",
+    "./client": "./client/product.ts",
+    "./client/islands": "./client/island-catalog.ts",
+    "./client/styles.css": "./client/product.css"
+  },
   "scripts": {
     "dev": "concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
     "dev:server": "tsx watch server/index.ts",
@@ -12,6 +18,14 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "bench": "tsx scripts/bench-render.ts"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true },
+    "react-dom": { "optional": true }
   },
   "dependencies": {
     "@radix-ui/react-popover": "^1.1.23",

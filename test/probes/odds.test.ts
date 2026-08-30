@@ -604,6 +604,9 @@ describe("odds board", () => {
       const instance = probe.createApp({
         id: "sess1",
         params: new URLSearchParams(query),
+        user: null,
+        grant() {},
+        revoke() {},
         invalidate: () => {},
       });
       return JSON.stringify(serialize(instance.app(), new TemplateRegistry()).root);

@@ -11,9 +11,16 @@ import {
   writeLatencyProfile,
   type LatencyProfile,
 } from "./latency";
+import { islandComponents } from "../islands/registry";
+import { registerIsland } from "./island-catalog";
 import { ClientRuntime } from "./runtime";
 import "./island-host";
 import { ProtocolLog } from "./protocol-log";
+import { attachSessionToken, isCredentialMessage, writeSessionToken } from "./session-token";
+
+for (const [name, component] of Object.entries(islandComponents)) {
+  registerIsland(name, component);
+}
 
 const RECONNECT_MIN_MS = 500;
 const RECONNECT_MAX_MS = 5000;
@@ -34,7 +41,7 @@ const probeId = query.get("probe") ?? "todo";
 
 // Every query parameter is forwarded, so a probe can be configured per tab
 // (?probe=routes&user=alice) without the client knowing what any of it means.
-const socketUrl = (() => {
+function socketUrl(): string {
   const base =
     query.get("ws") ?? `ws://${location.hostname}:${DEFAULT_PROTOCOL_PORT}`;
   const url = new URL(base);
@@ -44,8 +51,9 @@ const socketUrl = (() => {
     }
   }
   url.searchParams.set("probe", probeId);
+  attachSessionToken(url);
   return url.toString();
-})();
+}
 
 let latency: LatencyProfile = readLatencyProfile(location.search);
 let socket: WebSocket | null = null;
@@ -77,7 +85,7 @@ async function initProbePicker(): Promise<void> {
   if (!(picker instanceof HTMLSelectElement)) return;
 
   try {
-    const origin = new URL(socketUrl);
+    const origin = new URL(socketUrl());
     const response = await fetch(
       `http${origin.protocol === "wss:" ? "s" : ""}://${origin.host}/probes`,
     );
@@ -106,7 +114,7 @@ async function initProbePicker(): Promise<void> {
 
 function connect(): void {
   setStatus("connecting", "connecting");
-  const active = new WebSocket(socketUrl);
+  const active = new WebSocket(socketUrl());
   socket = active;
 
   // A fresh replica per connection: template ids are process-local to the
@@ -165,6 +173,12 @@ function connect(): void {
 
 function deliverInbound({ message, bytes }: InboundFrame): void {
   log.record("in", message, bytes);
+
+  if (isCredentialMessage(message)) {
+    writeSessionToken(message.token);
+    socket?.close();
+    return;
+  }
 
   try {
     runtime?.apply(message);

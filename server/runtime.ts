@@ -101,7 +101,11 @@ export class Runtime {
     return this.sessions.size;
   }
 
-  attach(socket: WebSocket, params = new URLSearchParams()): void {
+  attach(
+    socket: WebSocket,
+    params = new URLSearchParams(),
+    user: unknown | null = null,
+  ): void {
     const id = randomUUID().slice(0, 8);
 
     // The host needs the session to invalidate it, and the session needs the
@@ -114,6 +118,13 @@ export class Runtime {
     const context: SessionContext = {
       id,
       params,
+      user,
+      grant: (token: string) => {
+        if (self) this.send(self, { type: "credential", token });
+      },
+      revoke: () => {
+        if (self) this.send(self, { type: "credential", token: null });
+      },
       invalidate: () => {
         if (self) this.invalidateSession(self);
       },

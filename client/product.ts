@@ -1,0 +1,132 @@
+import { type ClientMessage, type ServerMessage } from "../shared/protocol";
+import { registerIsland } from "./island-catalog";
+import "./island-host";
+import { ClientRuntime } from "./runtime";
+import { attachSessionToken, isCredentialMessage, writeSessionToken } from "./session-token";
+
+export { registerIsland };
+
+const RECONNECT_MIN_MS = 500;
+const RECONNECT_MAX_MS = 5000;
+
+const mount = requireElement("app");
+const statusLabel = document.getElementById("status");
+
+const query = new URLSearchParams(location.search);
+const explicitProtocol = query.get("ws");
+
+function socketUrl(): string {
+  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  const base = explicitProtocol ?? `${protocol}//${location.host}/ws`;
+  const url = new URL(base);
+  for (const [key, value] of query) {
+    if (key !== "ws") url.searchParams.set(key, value);
+  }
+  // Cross-origin `?ws=` cannot set our cookie. Fall back to the query token.
+  if (explicitProtocol) attachSessionToken(url);
+  return url.toString();
+}
+
+let socket: WebSocket | null = null;
+let runtime: ClientRuntime | null = null;
+let reconnectDelay = RECONNECT_MIN_MS;
+
+connect();
+
+function connect(): void {
+  setStatus("connecting", "connecting");
+  const active = new WebSocket(socketUrl());
+  socket = active;
+
+  runtime = new ClientRuntime({
+    mount,
+    send: (message) => sendMessage(active, message),
+    onError: (message) => {
+      setStatus(
+        message.recoverable ? "connected" : "error",
+        `${message.code}: ${message.message}`,
+      );
+    },
+  });
+
+  active.addEventListener("open", () => {
+    reconnectDelay = RECONNECT_MIN_MS;
+    setStatus("connected", "connected");
+  });
+
+  active.addEventListener("message", (event) => {
+    if (typeof event.data !== "string") return;
+    let message: ServerMessage;
+    try {
+      message = JSON.parse(event.data) as ServerMessage;
+    } catch {
+      console.error("unparseable server message", event.data);
+      return;
+    }
+    if (isCredentialMessage(message)) {
+      void persistCredential(message.token).finally(() => active.close());
+      return;
+    }
+
+    try {
+      runtime?.apply(message);
+    } catch (error) {
+      console.error("failed to apply server message", error, message);
+      setStatus("error", "replica out of sync, reconnecting");
+      active.close();
+    }
+  });
+
+  active.addEventListener("close", () => {
+    if (socket === active) {
+      socket = null;
+      runtime = null;
+      setStatus("disconnected", "disconnected");
+      window.setTimeout(connect, reconnectDelay);
+      reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX_MS);
+    }
+  });
+
+  active.addEventListener("error", () => {
+    setStatus("error", "connection error");
+  });
+}
+
+async function persistCredential(token: string | null): Promise<void> {
+  if (!explicitProtocol) {
+    try {
+      const response = await fetch(new URL("/session", location.origin), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ token }),
+      });
+      if (response.ok) {
+        writeSessionToken(null);
+        return;
+      }
+    } catch {
+      // Fall through to the query-string token.
+    }
+  }
+  writeSessionToken(token);
+}
+
+function sendMessage(active: WebSocket, message: ClientMessage): void {
+  if (active.readyState !== WebSocket.OPEN) return;
+  active.send(JSON.stringify(message));
+}
+
+function setStatus(state: string, text: string): void {
+  if (!statusLabel) return;
+  statusLabel.dataset["state"] = state;
+  statusLabel.textContent = text;
+}
+
+function requireElement(id: string): HTMLElement {
+  const element = document.getElementById(id);
+  if (!element) {
+    throw new Error(`missing #${id} in the bootstrap document`);
+  }
+  return element;
+}

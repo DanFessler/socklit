@@ -153,6 +153,9 @@ function session(probe: Probe, id: string, mine: boolean) {
   const context: SessionContext = {
     id,
     params: new URLSearchParams(mine ? "probe=odds&mine=1" : "probe=odds"),
+    user: null,
+    grant() {},
+    revoke() {},
     invalidate: () => {},
   };
   return probe.createApp(context);

@@ -1,0 +1,21 @@
+{
+  "name": "my-socklit-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "tsx watch src/server.ts",
+    "dev:client": "vite"
+  },
+  "dependencies": {
+    "lit-html": "^3.3.3",
+    "socklit": "file:../..",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3",
+    "vite": "^8.2.2"
+  }
+}

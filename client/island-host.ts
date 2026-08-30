@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
-import { islandComponents } from "../islands/registry";
+import { lookupIsland } from "./island-catalog";
 import { IslandAddressContext } from "../islands/slot";
 import type {
   ClientMessage,
@@ -75,7 +75,7 @@ class SocklitIsland extends HTMLElement {
     if (!this.isConnected || !this.#bridge || !this.#spec) return;
 
     const { instanceId, hole, value } = this.#spec;
-    const Component = islandComponents[value.name];
+    const Component = lookupIsland(value.name);
     if (!Component) {
       this.textContent = `unknown island: ${value.name}`;
       return;

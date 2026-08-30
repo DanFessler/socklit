@@ -5,6 +5,7 @@ import {
 } from "./component";
 import { isFocusRequest } from "./focus";
 import { isKeyedList } from "./keyed";
+import type { SessionHandle } from "./session";
 
 /**
  * The server half of an island: a named contract, and two reserved
@@ -27,8 +28,23 @@ const WELL = Symbol("socklit.slot");
 const NAME_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
 const MAX_NAME = 64;
 
+/**
+ * Callbacks as the island sends them (JSON arguments only).
+ * `mount()` types the server closure as these args plus `session`.
+ */
 export type IslandEvents = {
   readonly [name: string]: (...args: never[]) => unknown;
+};
+
+type IslandServerFn<F extends (...args: never[]) => unknown> = F extends (
+  ...args: infer A
+) => infer R
+  ? (...args: [...A, SessionHandle]) => R
+  : never;
+
+/** What you write next to `<mount>`: island args, then the acting session. */
+export type IslandServerEvents<E extends IslandEvents> = {
+  readonly [K in keyof E]: IslandServerFn<E[K]>;
 };
 
 export type IslandMount = {
@@ -87,7 +103,11 @@ export function defineIsland<
 export function mount<
   P extends Record<string, WireJson>,
   E extends IslandEvents,
->(island: IslandHandle<P, E>, props: P & E, well?: SlotWell): IslandMount {
+>(
+  island: IslandHandle<P, E>,
+  props: P & IslandServerEvents<E>,
+  well?: SlotWell,
+): IslandMount {
   if (!isIslandHandle(island)) {
     throw new IslandError("mount() expected an island from defineIsland()");
   }

@@ -40,7 +40,13 @@ function todoList(items: Todo[]) {
 
 /** Stands in for the session the runtime passes at dispatch. */
 function actingSession(id = "s1", query = ""): SessionHandle {
-  return { id, params: new URLSearchParams(query) };
+  return {
+    id,
+    params: new URLSearchParams(query),
+    user: null,
+    grant() {},
+    revoke() {},
+  };
 }
 
 function listValue(root: WireInstance): WireListValue {
