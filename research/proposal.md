@@ -950,19 +950,25 @@ What is left, in order:
 
 | | Change | Why it comes here |
 | --- | --- | --- |
-| 1 | `useEcho` | A correctness defect, not an optimization |
-| 2 | `useGate` | The largest single improvement to how the product feels |
-| 3 | `pending()` | Cheapest item on the list, and reduces server load rather than adding to it |
-| 4 | `useSelection` | Same mechanism as `useGate`, so nearly free once it exists |
-| 5 | `shared()` | The structural cost advantage; design settled, work not small |
-| 6 | Test resolver | Not user-facing, but the cost of skipping it compounds with every screen |
-| 7 | Windowed collections | Sets the ceiling on how large a screen can be |
+| 1 | First paint (S5) | A server-authoritative framework that cold-loads like an SPA is a non-starter. [Specified](probes/first-paint.md) |
+| 2 | `useEcho` | A correctness defect, not an optimization |
+| 3 | `useGate` | The largest single improvement to how the product feels |
+| 4 | `pending()` | Cheapest item on the list, and reduces server load rather than adding to it |
+| 5 | `useSelection` | Same mechanism as `useGate`, so nearly free once it exists |
+| 6 | `shared()` | The structural cost advantage; design settled, work not small |
+| 7 | Test resolver | Not user-facing, but the cost of skipping it compounds with every screen |
+| 8 | Windowed collections | Sets the ceiling on how large a screen can be |
 
 **`useDurable` has shipped.** Default is this tab: reconnect and refresh keep
 the cell, a second tab has its own. `{ share: "user" }` is every tab of this
 person. `listen({ durableFile })` writes the vault so a deploy keeps
 in-flight work. Identity is `session.user` (string, number, or `{ id }`)
 or `?user=`. The replica sends `?socklit_tab=`.
+
+**First paint is specified, not built.** The HTTP response should be the
+page; connect makes it live. That is LiveView's dead render, not React
+`hydrate()`. The probe is allowed to change `listen`. See
+[`probes/first-paint.md`](probes/first-paint.md).
 
 One item on this list is still genuinely undecided. Windowed collections
 need an answer to who owns scroll position, and the wire needs move, insert and

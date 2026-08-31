@@ -49,7 +49,24 @@ describe("listen()", () => {
     });
 
     const response = await fetch(`http://127.0.0.1:${handle.port}/health`);
-    expect(await response.json()).toEqual({ ok: true, sessions: 0, protocol: 1 });
+    expect(await response.json()).toEqual({
+      ok: true,
+      name: "socklit",
+      sessions: 0,
+      protocol: 1,
+    });
+  });
+
+  it("advertises listen({ name }) on /health", async () => {
+    handle = await listen({
+      app: () => Hello({}),
+      name: "floor",
+      port: 0,
+      onLog: () => undefined,
+    });
+
+    const response = await fetch(`http://127.0.0.1:${handle.port}/health`);
+    expect(await response.json()).toMatchObject({ ok: true, name: "floor" });
   });
 
   it("passes identify's user into createApp", async () => {
@@ -198,6 +215,21 @@ describe("listen()", () => {
       body: JSON.stringify({ token: "ticket-1" }),
     });
     expect(response.status).toBe(403);
+  });
+
+  it("renders the app into #app on GET (first paint)", async () => {
+    handle = await listen({
+      app: () => Hello({}),
+      port: 0,
+      onLog: () => undefined,
+    });
+
+    const response = await fetch(`http://127.0.0.1:${handle.port}/`);
+    expect(response.status).toBe(200);
+    const body = await response.text();
+    expect(body).toContain("hello from listen");
+    expect(body).toContain('data-paint="html"');
+    expect(body).toContain('id="app"');
   });
 
   it("falls back to index.html for a missing public path", async () => {

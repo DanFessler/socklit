@@ -19,6 +19,7 @@ import {
 } from "../shared/protocol";
 import { HookHost, type RenderOutput } from "./component";
 import { durableIdentity, DurableVault } from "./durable";
+import { renderFirstPaint, type FirstPaint } from "./first-paint";
 import { diff } from "./diff";
 import { RuntimeMetrics } from "./metrics";
 import type {
@@ -138,6 +139,16 @@ export class Runtime {
     return this.durable.flush();
   }
 
+  /** One HTTP render. Same app as connect; the host is discarded. */
+  firstPaint(params: URLSearchParams, user: unknown | null = null): FirstPaint {
+    return renderFirstPaint({
+      createApp: this.createApp,
+      params,
+      user,
+      durable: this.durable,
+    });
+  }
+
   get sessionCount(): number {
     return this.sessions.size;
   }
@@ -238,6 +249,9 @@ export class Runtime {
     });
 
     this.enqueue(session, async () => {
+      const delayMs = snapshotDelay(params);
+      if (delayMs > 0) await sleep(delayMs);
+      if (session.closed) return;
       this.renderSession(session);
     });
   }
@@ -684,4 +698,15 @@ function encodeIslandResult(value: unknown): WireJson | null {
   if (value === undefined) return null;
   const json = parseWireJson(value, 0);
   return json === undefined ? null : json;
+}
+
+/** `?delay=` holds the first snapshot so a first-paint document can be seen. Cap 10s. */
+function snapshotDelay(params: URLSearchParams): number {
+  const raw = Number(params.get("delay"));
+  if (!Number.isFinite(raw) || raw <= 0) return 0;
+  return Math.min(raw, 10_000);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

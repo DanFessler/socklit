@@ -1,7 +1,10 @@
+import { readFile } from "node:fs/promises";
 import { createServer, type IncomingHttpHeaders, type IncomingMessage, type ServerResponse } from "node:http";
+import path from "node:path";
 import { WebSocketServer } from "ws";
 
 import { DEFAULT_PROTOCOL_PORT, MAX_MESSAGE_BYTES } from "../shared/protocol";
+import { resolveAppName } from "./app-name";
 import type { RenderOutput } from "./component";
 import { parseCookies } from "./cookies";
 import type { ChangeListener, ProbeInstance, SessionContext } from "./probes/types";
@@ -9,6 +12,12 @@ import { PROTOCOL_VERSION } from "./protocol-version";
 import { servePublicFile } from "./public-dir";
 import { tokenIdentifyRequest } from "./reidentify";
 import { DurableVault } from "./durable";
+import { renderFirstPaint } from "./first-paint";
+import {
+  DEFAULT_SHELL,
+  injectApp,
+  parsePaint,
+} from "./markup";
 import { Runtime } from "./runtime";
 import { readSessionBody, writeSessionCookie } from "./session-cookie";
 
@@ -58,6 +67,13 @@ export type ListenOptions<User = unknown> = {
    * upgrade and on `POST /session`. Omit locally.
    */
   origin?: string | string[];
+  /**
+   * Who this process is. Advertised on `GET /health` as `name`. The
+   * replica and `firstPaint()` refuse a different name, so a leftover
+   * on this port cannot become the app. Default is `package.json`
+   * `"name"` from cwd.
+   */
+  name?: string;
   port?: number;
   onLog?: (message: string) => void;
   /**
@@ -89,6 +105,7 @@ export async function listen<User = unknown>(
   }
 
   const createApp = normalizeCreateApp(options);
+  const appName = resolveAppName(options.name);
   const port = options.port ?? Number(process.env["PORT"] ?? DEFAULT_PROTOCOL_PORT);
   const log = options.onLog ?? ((message: string) => console.log(`[socklit] ${message}`));
   const publicDir = options.publicDir;
@@ -121,6 +138,7 @@ export async function listen<User = unknown>(
     if (url.pathname === "/health") {
       json(response, 200, {
         ok: true,
+        name: appName,
         sessions: runtime.sessionCount,
         protocol: PROTOCOL_VERSION,
       });
@@ -140,6 +158,48 @@ export async function listen<User = unknown>(
       } catch {
         response.writeHead(400, { "content-type": "application/json" });
         response.end(JSON.stringify({ error: "invalid session body" }));
+      }
+      return;
+    }
+
+    if (isPageRequest(request.method, url.pathname)) {
+      const paint = parsePaint(url.searchParams.get("paint"));
+      if (paint === "shell") {
+        if (publicDir && (await servePublicFile(publicDir, request, response))) {
+          return;
+        }
+        sendHtml(response, request.method, DEFAULT_SHELL);
+        return;
+      }
+
+      const identifyRequest: IdentifyRequest = {
+        params: withPath(url),
+        headers: request.headers,
+        cookies: parseCookies(request.headers.cookie),
+      };
+
+      try {
+        const user = await settleIdentity(options.identify, identifyRequest);
+        const painted = renderFirstPaint({
+          createApp,
+          params: identifyRequest.params,
+          user,
+          durable,
+        });
+        const shell = publicDir ? await readShell(publicDir) : DEFAULT_SHELL;
+        const document = injectApp(
+          shell,
+          painted.markup,
+          painted.revision,
+          paint,
+          appName,
+        );
+        sendHtml(response, request.method, document);
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : "first paint failed";
+        log(`first paint rejected ${url.pathname}: ${reason}`);
+        response.writeHead(500, { "content-type": "text/plain; charset=utf-8" });
+        response.end(reason);
       }
       return;
     }
@@ -187,7 +247,7 @@ export async function listen<User = unknown>(
       const address = server.address();
       const bound =
         typeof address === "object" && address !== null ? address.port : port;
-      log(`session protocol on ws://localhost:${bound}`);
+      log(`session protocol on ws://localhost:${bound} (${appName})`);
       resolve({
         port: bound,
         close: () =>
@@ -259,6 +319,46 @@ function requestOrigin(request: IncomingMessage): string | undefined {
   const encrypted = Boolean((request.socket as { encrypted?: boolean }).encrypted);
   const proto = forwarded === "https" || encrypted ? "https" : "http";
   return `${proto}://${host}`;
+}
+
+function isPageRequest(method: string | undefined, pathname: string): boolean {
+  if (method !== "GET" && method !== "HEAD") return false;
+  if (
+    pathname === "/ws" ||
+    pathname === "/session" ||
+    pathname === "/health"
+  ) {
+    return false;
+  }
+  const ext = path.posix.extname(pathname);
+  return ext === "" || ext === ".html";
+}
+
+function withPath(url: URL): URLSearchParams {
+  const params = new URLSearchParams(url.searchParams);
+  if (!params.has("path")) params.set("path", url.pathname);
+  return params;
+}
+
+async function readShell(publicDir: string): Promise<string> {
+  try {
+    return await readFile(path.join(publicDir, "index.html"), "utf8");
+  } catch {
+    return DEFAULT_SHELL;
+  }
+}
+
+function sendHtml(
+  response: ServerResponse,
+  method: string | undefined,
+  body: string,
+): void {
+  response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  if (method === "HEAD") {
+    response.end();
+    return;
+  }
+  response.end(body);
 }
 
 function json(

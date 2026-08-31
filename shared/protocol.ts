@@ -7,6 +7,31 @@
 
 export const DEFAULT_PROTOCOL_PORT = 8787;
 export const PROTOCOL_VERSION = 1;
+
+/** `GET /health`. The replica and first paint refuse a process whose `name` differs. */
+export type Health = {
+  ok: true;
+  name: string;
+  sessions: number;
+  protocol: number;
+};
+
+export function asHealth(body: unknown): Health | null {
+  if (typeof body !== "object" || body === null) return null;
+  const record = body as Record<string, unknown>;
+  if (record["ok"] !== true) return null;
+  if (typeof record["name"] !== "string" || record["name"].length === 0) {
+    return null;
+  }
+  if (typeof record["sessions"] !== "number") return null;
+  if (typeof record["protocol"] !== "number") return null;
+  return {
+    ok: true,
+    name: record["name"],
+    sessions: record["sessions"],
+    protocol: record["protocol"],
+  };
+}
 export const MAX_MESSAGE_BYTES = 16 * 1024;
 export const MAX_HOLE_INDEX = 255;
 export const MAX_SUBMIT_FIELDS = 64;

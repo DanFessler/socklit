@@ -49,7 +49,7 @@ decided and deliberately absent.
 | **S2** where navigation lives | **Resolved: subtree swap with a stable shell**, which the runtime already does | Yes, as authoring (shell + hole). No first-class route body | routes |
 | **S3** granularity of invalidation | **Resolved: do not build dependency tracking.** Two narrower mechanisms instead | Partial. Read-scoped invalidation yes; subtree `cached()` no | clock, ledger |
 | **S4** what is a session | **Resolved: three tiers, author picks at the hook.** A connection is not a person and not a task | Yes. `useState` is the connection; `useDurable` is the task; the store is everyone | [checkout](probes/checkout.md) |
-| **S5** initial state and first paint | **New, unprobed.** No probe needed it because none served a visitor without a socket | No. First paint still needs the socket | — |
+| **S5** initial state and first paint | **Specified, unbuilt.** First paint is a render, not a socket. HTTP should be the first snapshot | Partial. `listen()` GET is the tree (`html`). `shell` is the control. `html+adopt` is unfinished | [first paint](probes/first-paint.md) |
 | **A1** uncontrolled escape | **Confirmed unusable as policy**, with three new failure modes | n/a — refuse | admin |
 | **A2** client primitives | **Adopt.** The minimum set is one primitive, and it is necessary but not sufficient | No. `useGate` / `useEcho` / `useSelection` still proposed | admin, ledger |
 | **A3** open islands | **Adopt separately, and do not build A2 on it.** Authoring prototype on this branch | Yes. `<mount>` is in the product runtime | admin, islands |
@@ -477,52 +477,50 @@ JavaScript fails or is slow, which is the reason `economics.md` writes off
 content-shaped applications and the reason the architecture is a poor fit for
 anything discovered through search.
 
-The machinery to change that already exists in the chosen primitive.
-`@lit-labs/ssr` renders a `TemplateResult` to HTML in Node behind a minimal DOM
-shim, embedding `lit-part` and `lit-node` comment markers; `hydrate()` from
-`@lit-labs/ssr-client` walks those markers and rebuilds the `ChildPart` and
-`AttributePart` structures so ordinary `render()` takes over afterwards.
+**Specified.** The probe is [first paint](probes/first-paint.md). The
+prior-art target is LiveView's dead render, not React `hydrate()`. The HTTP
+response should be the page; connect makes it live. `@lit-labs/ssr` is the
+wrong default tool: the replica already paints from a wire tree, and HTML is
+another encoding of that tree. lit's digest and `hydrate()` assume the
+browser holds the functions.
 
-**It does not overlap with the IR, except in one place.** lit's SSR is one-shot
-and one-directional — no diffing, no update path, no wire format for what
-changed, and no event story, since a function cannot be serialized into markup.
-`serialize.ts` and `diff.ts` answer a question it never asks. The single genuine
-overlap is the *initial state*: an SSR'd document and the `templates` +
-`snapshot` pair are two answers to how a client obtains its first tree, and only
-one is needed. Everything after first paint is unaffected either way.
+**It does not overlap with the IR, except in one place.** A one-shot HTML
+encode has no diffing, no update path, and no event story — a function
+cannot be serialized into markup. `serialize.ts` and `diff.ts` answer a
+question it never asks. The single genuine overlap is the *initial state*:
+an HTML document and the `templates` + `snapshot` pair are two answers to
+how a client obtains its first tree, and only one is needed. Everything
+after first paint is unaffected either way.
 
-Three tiers, in increasing cost:
+Three tiers, in increasing cost. The probe's `?paint=` values are the ones
+in parentheses.
 
 | Tier | What it is | Buys | Costs |
 | --- | --- | --- | --- |
-| **1. SSR only** | Server-rendered HTML, no socket for this visitor | Crawlers, link previews, no-JS readers, a CDN-cacheable cold load | A second code path for a separate audience |
-| **2. SSR, then full client render** | Serve HTML for first paint; on connect, ordinary `render()` into the container, discarding the server DOM | Tier 1 plus a fast first paint, with no digest matching and no revision handshake | A visible re-render, and any DOM state in that window |
-| **3. SSR plus `hydrate()`** | Adopt the server DOM properly | No re-render, no lost state | Digest agreement, a revision handshake, and the handler seam |
+| **1. HTML only** (`curl`) | Server-rendered HTML, no socket for this visitor | Crawlers, link previews, no-JS readers | A request that is not a session |
+| **2. HTML, then replace** (`html`) | Serve HTML for first paint; on connect, `snapshot` discards the server DOM | Tier 1 plus a fast first paint, no digest, no revision handshake | A visible re-render, and any DOM state in that window |
+| **3. HTML, then adopt** (`html+adopt`) | Carry the HTML's revision; patches apply; `snapshot` is reconnect-only | No full re-send, no lost paint | A handshake, and addresses in the markup |
 
-Two seams stand between tier 2 and tier 3. **Handlers**: lit's hydration assumes
-the client holds the real functions, but here they live on the server and the
-client binds a dispatcher that sends `(instanceId, holeIndex)`, so attribute
-parts are hydrated with something structurally unlike what the server rendered.
-**The revision race**: `hydrate()` must be called with the same template *and
-data* the server rendered with or it throws, so a document rendered at revision
-N against a socket that connects at N+3 fails. The initial HTML would have to
-carry its render revision, the client hydrate against those values, and the
-runtime then apply N→N+3 as an ordinary patch — a small addition to the connect
-handshake, and much cheaper to design now than to discover later.
+Two seams stand between tier 2 and tier 3. **Handlers**: they are addresses
+in the HTML, the same ones the replica already binds, not functions. No-JS
+does not fire them. **The revision race**: a document rendered at revision
+N against a socket that connects at N+k must patch, not hydrate-or-throw.
+The HTML has to carry its revision. That is cheaper to design now than to
+discover later.
 
 **This is where S5 presses on S4.** Tier 1 describes a visitor who is served
-correctly with *no session at all* — a fourth tier below the three S4 proposes,
-and the only one that costs nothing to retain. Every probe assumed a session was
-required to render anything, and none had reason to question it.
+correctly with *no session at all* — the audience checkout named and did
+not touch. They are not a fourth lifetime. They are a request. Identity is
+whatever `identify` can compute from the GET. `useState` has no one to
+belong to. A tab-scoped `useDurable` has no tab.
 
-Open: does a `TemplateResult` synthesized from interned statics produce the same
-digest lit SSR embedded in its markers? Everything in tier 3 rests on that and it
-is currently an assumption. And if SSR delivers the initial tree, does `snapshot`
-survive at all, or does it become reconnect-only?
+The probe is allowed to change `listen`. First paint cannot be faked in an
+app the way checkout faked a durable draft with `?draft=store`. Until GET
+runs `createApp`, the only configuration is the shell.
 
-Not probed. `@lit-labs/ssr` is Lit Labs and explicitly pre-release, and its
-server-only `html` tag omits hydration markers and cannot be hydrated, so live
-regions would have to use ordinary templates.
+Not built. The open questions the spec refuses to pre-answer: whether
+`html+adopt` can omit the first `snapshot`, and whether an HTTP render of
+`useDurable({ share: "user" })` may read the vault.
 
 ---
 
@@ -1021,6 +1019,7 @@ Applications that break something. Each names the questions it forces.
 | Live-validating signup | Username availability plus a masked phone field | A2, A4 | — |
 | Menu-heavy admin | Dropdowns, modals, tooltips, popovers | A1-A3, the ownership taxonomy | [built](probes/admin.md) |
 | Checkout wizard | Four steps, then the laptop sleeps | S4, A8 | [built](probes/checkout.md) |
+| First paint | A live brief that `curl` must also be able to read | S5 | [partial](probes/first-paint.md) |
 | Chart dashboard | Any real charting library | A3 | — |
 | Client islands | Radix + Tailwind behind `<mount>` / `<slot>` | A3 authoring | [built](probes/islands.md) |
 | Spreadsheet / editor | 10k cells, or collaborative text | A7, A5, A2 | — |
@@ -1189,6 +1188,23 @@ that holds, A9 is justified without ever resolving the perceptual question.
 
 Effort: a day or two, and it can borrow the odds board's contention machinery
 rather than reinventing it.
+
+## Specified but not built: first paint
+
+The probe for S5. Specified in full in [first-paint.md](probes/first-paint.md)
+because the product today is an SPA cold load, and because the register's
+first draft of this question aimed at `@lit-labs/ssr` + `hydrate()`, which
+is the wrong tool.
+
+A public brief and a signed-in chip on one URL. `curl` must see the
+article. A cookie on the GET must see Ada, with no socket. Connect makes
+the reader count live. `?paint=shell|html|html+adopt` is the variable.
+The host is in play: until `listen` runs `createApp` on GET, the only
+honest result is the shell we already have.
+
+This is not the marketing-site study [refused below](#probes-that-would-mislead).
+Static HTML still wins a blog. The probe asks whether a *live* page can
+also be a document.
 
 ---
 
@@ -1376,7 +1392,9 @@ Worth naming so they are not mistaken for good news.
 - **Marketing or content site.** `economics.md` finding 6 shows a 4.5x cost
   advantage, and it is real and irrelevant: static HTML beats every architecture
   in the study. Building it would produce a true number that recommends the wrong
-  thing.
+  thing. The [first paint](probes/first-paint.md) probe is not this. It is a
+  live page that must also be a document. Do not use `/guide` as the subject
+  and do not report Socklit-versus-CDN.
 - **Consumer social feed.** Cheapest on paper in the model and still a bad idea —
   fan-out 1.2 means no amortization is possible, and 21,300 unsheddable inbound
   events per second is an operational risk the cost figure does not express.
@@ -1470,10 +1488,15 @@ than scheduled.
 
 Ordered by what they would settle, not by effort:
 
+- **First paint** — [specified](probes/first-paint.md). S5. The product
+  claim people will actually test: is the first response the page, or a
+  shell. Allowed to change `listen`. Ranked here because a server-
+  authoritative framework that cold-loads like an SPA is a non-starter,
+  and because the docs site is already that failure.
 - **Claim queue** — [specified above](#specified-but-not-built-the-claim-queue).
-  The only probe that would settle a *new* register entry rather than refine a
-  resolved one, and the cheapest on this list.
-- **Checkout wizard** — built. S4 is answered; A8 is specified and not shipped.
+  The only remaining probe that would settle a *new* affordance rather
+  than a structural gap, and the cheapest on this list.
+- **Checkout wizard** — built. S4 is answered; A8 has shipped.
 - **Virtualized log** — would turn A5's promotion into a specification, and is the
   probe the admin and ledger findings both point at.
 - **Presence indicator** — the sparse-graph case that read-scoped invalidation

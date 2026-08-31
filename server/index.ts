@@ -1,16 +1,25 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer } from "ws";
 
-import { DEFAULT_PROTOCOL_PORT, MAX_MESSAGE_BYTES } from "../shared/protocol";
+import { MAX_MESSAGE_BYTES, PROTOCOL_VERSION } from "../shared/protocol";
+import { resolveAppName } from "./app-name";
 import { RuntimeMetrics } from "./metrics";
 import { discoverProbes } from "./probes/discover";
 import { DurableVault } from "./durable";
+import {
+  DEFAULT_SHELL,
+  injectApp,
+  parsePaint,
+} from "./markup";
 import { Runtime } from "./runtime";
 
-const port = Number(process.env["PORT"] ?? DEFAULT_PROTOCOL_PORT);
+/** Not 8787. That default is a product app; the lab must not share it. */
+const LAB_PROTOCOL_PORT = 8795;
+const port = Number(process.env["PORT"] ?? LAB_PROTOCOL_PORT);
 const DEFAULT_PROBE = "todo";
+const appName = resolveAppName();
 
 const log = (message: string): void => console.log(`[server] ${message}`);
 
@@ -58,8 +67,10 @@ const server = createServer((request, response) => {
   if (url.pathname === "/health") {
     respond(response, 200, {
       ok: true,
+      name: appName,
       probes: [...hosted.keys()],
       sessions: totalSessions(),
+      protocol: PROTOCOL_VERSION,
     });
     return;
   }
@@ -90,6 +101,47 @@ const server = createServer((request, response) => {
         ]),
       ),
     );
+    return;
+  }
+
+  const method = request.method ?? "GET";
+  const ext = posix.extname(url.pathname);
+  if (
+    (method === "GET" || method === "HEAD") &&
+    (ext === "" || ext === ".html")
+  ) {
+    const requested = url.searchParams.get("probe") ?? DEFAULT_PROBE;
+    const target = hosted.get(requested);
+    const paint = parsePaint(url.searchParams.get("paint"));
+    if (!target) {
+      respond(response, 404, { error: `unknown probe: ${requested}` });
+      return;
+    }
+    if (paint === "shell") {
+      sendHtml(response, method, DEFAULT_SHELL);
+      return;
+    }
+    const params = new URLSearchParams(url.searchParams);
+    if (!params.has("path")) params.set("path", url.pathname);
+    const user = params.get("user");
+    try {
+      const painted = target.runtime.firstPaint(params, user);
+      // Revision race: HTML is revision N; the store moves before connect.
+      if (url.searchParams.get("race") === "1") {
+        const bump = (target.probe as { bumpReaders?: () => void }).bumpReaders;
+        bump?.();
+      }
+      sendHtml(
+        response,
+        method,
+        injectApp(DEFAULT_SHELL, painted.markup, painted.revision, paint, appName),
+      );
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "first paint failed";
+      log(`first paint rejected ${url.pathname}: ${reason}`);
+      response.writeHead(500, { "content-type": "text/plain; charset=utf-8" });
+      response.end(reason);
+    }
     return;
   }
 
@@ -135,6 +187,19 @@ function totalSessions(): number {
     total += runtime.sessionCount;
   }
   return total;
+}
+
+function sendHtml(
+  response: ServerResponse<IncomingMessage>,
+  method: string,
+  body: string,
+): void {
+  response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  if (method === "HEAD") {
+    response.end();
+    return;
+  }
+  response.end(body);
 }
 
 function respond(

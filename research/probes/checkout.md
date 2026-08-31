@@ -76,7 +76,8 @@ asks which of those bytes were *allowed* to die.
 
 Identity (`?user=`, a cookie, `grant`) names the person. It is not a place to
 put the draft. S5's visitor with no session at all is a fourth audience, not
-a fourth lifetime, and this probe did not touch it.
+a fourth lifetime, and this probe did not touch it. That is now
+[first paint](first-paint.md).
 
 Who decides: **the author.** The probe did not find a rule that could assign
 tiers automatically. A cart is a store in a supermarket and a draft in a

@@ -122,11 +122,16 @@ export class ClientRuntime {
    * A snapshot is an authoritative resync. Any previously rendered DOM is torn
    * down first so local interaction that the server did not accept, such as a
    * checkbox the browser toggled optimistically, cannot survive as stale state.
+   *
+   * HTTP first paint is not a lit render root. The first snapshot must discard
+   * those nodes or lit will paint a second tree next to them. Adopt keeps them.
    */
   private setRoot(root: WireInstance): void {
     if (this.root) {
       render(nothing, this.mount);
       this.dispatchers.clear();
+    } else {
+      discardHttpPaint(this.mount);
     }
 
     this.root = root;
@@ -367,4 +372,23 @@ function isKeyboardEvent(event: Event): event is KeyboardEvent {
       event.type === "keypress") &&
     typeof (event as KeyboardEvent).key === "string"
   );
+}
+
+export type PaintMount = {
+  dataset: { paint?: string };
+  hasChildNodes(): boolean;
+  replaceChildren(): void;
+};
+
+/**
+ * Drop the HTTP tree so the first snapshot owns `#app`.
+ *
+ * lit-html's first `render()` does not replace foreign children; it adds a
+ * second tree. `html+adopt` is the later handshake that keeps these nodes.
+ */
+export function discardHttpPaint(mount: PaintMount): void {
+  const paint = mount.dataset.paint;
+  if (paint === "adopt" || paint === "html+adopt") return;
+  if (!mount.hasChildNodes()) return;
+  mount.replaceChildren();
 }

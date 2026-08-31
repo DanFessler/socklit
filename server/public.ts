@@ -33,6 +33,7 @@ export {
 export { changeSource, ChangeSource } from "./source";
 export { signTicket, verifyTicket } from "./ticket";
 export { PROTOCOL_VERSION } from "./protocol-version";
+export type { Health } from "../shared/protocol";
 
 export { listen, type IdentifyRequest, type ListenHandle, type ListenOptions } from "./listen";
 

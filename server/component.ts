@@ -400,6 +400,9 @@ export class HookHost {
 
   /** Set on a host that will be discarded after one render. */
   private ephemeral = false;
+  /** One HTTP render. Hooks run; the host is discarded after the response. */
+  private firstPaint = false;
+  private readonly paintLocals = new Map<string, unknown>();
 
   constructor(
     onInvalidate: () => void = () => {},
@@ -425,6 +428,33 @@ export class HookHost {
     const host = new HookHost();
     host.ephemeral = true;
     return host;
+  }
+
+  /**
+   * A host for the HTTP first paint.
+   *
+   * Unlike `transient()`, hooks are legal: the tree may call `useState`
+   * and `useDurable`. The host is discarded after the response, so those
+   * cells do not outlive the GET. Tab-scoped durable has no tab and
+   * returns the initial without writing the vault.
+   */
+  static firstPaint(durable: DurableBinding | null = null): HookHost {
+    const host = new HookHost(() => {}, durable);
+    host.firstPaint = true;
+    return host;
+  }
+
+  get isFirstPaint(): boolean {
+    return this.firstPaint;
+  }
+
+  /** One-render value for a durable name that has no tab or person on GET. */
+  paintLocal<T>(name: string, initial: T | (() => T)): T {
+    const existing = this.paintLocals.get(name);
+    if (existing !== undefined) return existing as T;
+    const value = cloneJson(resolveInitial(initial));
+    this.paintLocals.set(name, value);
+    return value;
   }
 
   /** Live component instances holding state. */
@@ -758,11 +788,36 @@ export function useDurable<T>(
   }
 
   const share = options.share ?? "tab";
+  const identity = binding.identity();
+  const tab = binding.tab();
+  if (
+    host.isFirstPaint &&
+    ((share === "tab" && !tab) || (share === "user" && !identity))
+  ) {
+    const entry = scope.entry ?? host.openEntry(scope);
+    const index = scope.index;
+    scope.index += 1;
+    if (index >= entry.slots.length) {
+      entry.slots.push({
+        kind: "durable",
+        key: `paint:${name}`,
+        setter: () => {},
+      });
+    }
+    const slot = entry.slots[index];
+    if (!slot || slot.kind !== "durable") {
+      throw new ComponentError(
+        `<${entry.name}> at ${entry.key} hook ${index} was not a useDurable last render`,
+      );
+    }
+    return [host.paintLocal(name, initial), slot.setter as StateSetter<T>];
+  }
+
   const key = durableCellKey({
     share,
     name,
-    identity: binding.identity(),
-    tab: binding.tab(),
+    identity,
+    tab,
   });
 
   const entry = scope.entry ?? host.openEntry(scope);
