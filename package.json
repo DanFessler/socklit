@@ -3,7 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Server-authoritative UI prototype: lit-html templates replicated over WebSockets",
+  "description": "A server-authoritative UI runtime: you write components next to your data; the browser is a replica.",
+  "files": [
+    "server",
+    "client",
+    "shared",
+    "package.json"
+  ],
   "exports": {
     "./server": "./server/public.ts",
     "./client": "./client/product.ts",

@@ -6,8 +6,8 @@ it is given and sends clicks back as addresses. There is no REST handler
 for a button. The click runs the function you wrote on the server.
 
 This page is the whole first-week surface. If something you need is not
-here, it is either missing from the product or not yet documented — treat
-that as a hole, not as a prompt to read the framework’s internals.
+here, it is missing from the product or not yet documented — not a prompt
+to read the framework’s internals.
 
 ## Install and run
 
@@ -18,26 +18,19 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:5173>. That is the only URL. Vite proxies
-`/ws`, `/session`, and `/health` to `listen()` on 8787, so the browser
-sees one origin. The replica talks `ws://localhost:5173/ws`. You do
-not add `?ws=`.
+Open <http://localhost:5173>. That is the only URL.
 
-`listen()` still binds 8787 (or `PORT`, or `{ port }`). If you move
-that port, change the proxy `target` in `vite.config.ts` to match.
-`?ws=ws://localhost:<listen-port>` is the escape hatch when there is
-no proxy — cookies will not cross that hop.
-
-Two processes, one command. Edit `src/app.ts`, save, refresh if the
-replica does not hot-replace the tree (the server restarts on save; the
-client reconnects).
-
-After `npm run build`, `listen({ publicDir: "dist" })` serves the page
-and the socket from one port (`npm start`, then that port). HTTPS is
-still your reverse proxy, not this process.
+If you change `listen({ port })`, change the Vite proxy `target` in
+`vite.config.ts` to match. After `npm run build`,
+`listen({ publicDir: "dist" })` serves the page and the socket from one
+process (`npm start`). HTTPS is still your reverse proxy, not this
+process.
 
 You import the framework as `socklit/server`. You do not import files
 from inside the Socklit repo.
+
+Edit `src/app.ts`, save, refresh if the replica does not hot-replace
+the tree (the server restarts on save; the client reconnects).
 
 ## Your first files
 
@@ -64,6 +57,27 @@ await listen({
 `useState` is this tab only. Open a second tab on the starter: an add
 appears in both. That is the store + `subscribe` line, not `useState`.
 
+## The URL
+
+The replica puts the page path on the socket as
+`session.params.get("path")`. Vite (and `listen({ publicDir })` after a
+build) serves `index.html` for paths that are not a real file, so a
+reload of `/compare` still boots the replica. Your app switches on that
+path:
+
+```ts
+await listen({
+  createApp: (session) => () => App({ path: session.params.get("path") ?? "/" }),
+});
+```
+
+That is not a router. `<a href="/compare">` is a real navigation: new
+page, new socket, same bootstrap, different path.
+
+`session.params` is the rest of the URL query (`?mine=1` is a filter
+you chose). Anyone can edit it. It is not how you know who is connected
+— that is `session.user`, below.
+
 ## Components
 
 A component takes one props object and returns `html\`…\``.
@@ -76,12 +90,30 @@ export const App = component(function App() {
 });
 ```
 
-Call it as a function: `App({})`. That is the typed spelling.
+Call it as a function: `App({})`. That is the typed spelling. A
+function call can pass another template as a **named** prop
+(`TodoRow({ todo, extra: html\`<span>…</span>\` })`).
+
+### Templates
+
+`html` is [lit-html](https://lit.dev/docs/templates/expressions/). Three
+prefixes, plus an interpolation:
+
+| You write | Meaning |
+| --- | --- |
+| `${value}` | A value (text, a nested template, a component, a handler) |
+| `@click=${fn}` | An event. Also `@change`, `@submit`. |
+| `.checked=${bool}` | A DOM property. |
+| `?disabled=${bool}` | A boolean HTML attribute (`disabled`, `hidden`). |
+
+Do not put `.value=` on a text field you want the user to keep typing
+into — that is a property, and every render will snap it back. See
+Forms below.
 
 ### Tags (optional)
 
-`html` tags are strings, not identifiers. To write `<TodoRow .todo=${todo}>`
-you must claim the name:
+`html` tags are strings, not identifiers. To write
+`<TodoRow .todo=${todo}>` you must claim the name:
 
 ```ts
 component.tag("TodoRow", (props: { todo: Todo }) => {
@@ -92,9 +124,11 @@ html`<TodoRow .todo=${todo}></TodoRow>`
 ```
 
 The string is the catalog key, not a name scraped off the function. A
-tag is **not type-checked**. Props must be holes (`.todo=${todo}`). A
-tag does not take children. Prefer `TodoRow({ todo })` when you want
-the checker.
+tag is **not type-checked**. Every prop must be a named binding
+(`.todo=${todo}`), not a static attribute. A tag does not take
+children — there is no unnamed slot between the tags. Nest through a
+named prop on the function call instead. Prefer `TodoRow({ todo })`
+when you want the checker.
 
 ## Events
 
@@ -131,8 +165,6 @@ html`
   **string**, including `<input type="number">`.
 - `@change` → `value` and/or `checked`.
 - `@click` → just the click.
-- `?disabled=${…}` is a boolean attribute. `.checked=` is a property.
-  Use `?` for HTML booleans (`disabled`, `hidden`).
 
 The second argument is the session that acted:
 
@@ -167,7 +199,9 @@ The replica paints the template. It does not own the typing caret.
 
 ## Lists
 
-Plain arrays in a hole are refused. Wrap them:
+A list needs a stable identity per row. A plain JavaScript array in
+`${…}` is refused so a insert or delete cannot reuse the wrong
+`useState` or the wrong closures. Wrap the collection:
 
 ```ts
 html`<ul class="item-list">
@@ -185,77 +219,140 @@ on `items.length` and omit the list (the starter does this).
 The key must be stable. Do not use the array index if the list can
 reorder or delete.
 
-## State: one session vs everyone
+## Shared state
 
-`useState` is **this browser tab**. Use it for open/closed chrome and
-flash messages.
+Three different things, not a binary:
 
-Data everyone should see lives in a **store**. `useStore(store)` records
-that this session read it. `listen({ subscribe })` tells the runtime
-when to re-render. The starter already does this; copy that split.
+- **This connection.** `useState` — open/closed chrome, flash messages.
+  Dies with the socket.
+- **This source.** `useStore(source)` — every connected replica that
+  read that object re-renders when it changes. Not “the internet”;
+  the sessions on this process that subscribed.
+- **A person you computed.** `session.user` — see below. A guest and a
+  member can share a source and still paint different trees.
+
+Socklit does not own the database. Three names must agree:
+
+- `useStore(source)` records that this session read `source`.
+- `listen({ subscribe })` is how you tell the runtime something moved.
+- `onChange(source)` names **the same object** `useStore` saw.
+
+The starter is the whole recipe. The store *is* the source:
 
 ```ts
-void store.mutate((current) => ({
+// app.ts
+export const store = await createJsonStore<Item[]>({
+  file: "data/items.json",
+  initial: () => [],
+  parse: parseItems,
+});
+
+export const App = component(function App(props: { store: typeof store }) {
+  const items = useStore(props.store).state;
+  return html`… ${keyed(items, (item) => item.id, (item) => html`<li>${item.title}</li>`)} …`;
+});
+
+void props.store.mutate((current) => ({
   next: [...current, item],
   result: undefined,
 }));
 ```
 
+```ts
+// server.ts
+await listen({
+  app: () => App({ store }),
+  subscribe: (onChange) => store.onChange(() => onChange(store)),
+});
+```
+
+`createJsonStore` is a **local default** — a JSON file behind a mutex —
+not the product database. `file` is relative to the process working
+directory. Parent directories are created on first write. Gitignore
+`data/`.
+
 `result` is the value of the Promise (`await store.mutate(…)`). The
 replica never reads it. `undefined` is fine when the handler does not
 await.
 
-Rules:
-
 - Do not mutate `store.state`. Return a replacement from `mutate`.
 - Returning the same reference from `mutate` is a no-op (no write, no notify).
-- `useStore(store)` must receive the **same object** you pass to
-  `onChange(store)`.
-- `file` is relative to the **process working directory** (usually the
-  app root when you `npm run dev`). Parent directories are created on
-  first write. Gitignore `data/` — it is not in the starter’s repo
-  ignore unless you add it.
+- Two `mutate` calls at once are serialized. Last completed write wins;
+  there is no automatic merge.
 
-Two `mutate` calls at once are serialized on the server. Last completed
-write wins; there is no automatic merge.
+If you already have a listener (your database, a mutex you wrote), you
+do not need `createJsonStore`. Hold a `changeSource()`, call
+`useStore(source)` when you read, and notify with that same object:
+
+```ts
+import { changeSource } from "socklit/server";
+
+export const source = changeSource();
+
+export function watch(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+await listen({
+  app: () => App({}),
+  subscribe: (onChange) => watch(() => onChange(source)),
+});
+```
 
 ## Who is connected
 
-`session.params` is the query string (`?mine=1`). It is **not** a person.
-Anyone can edit the URL. A desk that must refuse a write needs
-`session.user` — a value **you** computed on the server.
+`session.user` is a value **you** computed on the server, or `null` if
+the tab is signed out. An app that refuses a write reads that value
+inside the handler — not the URL, not whether a button was painted.
 
 Three pieces.
 
-**1. Look the token up** when the socket connects:
+**1. Look the token up** when the socket connects. `signTicket` /
+`verifyTicket` is the path that survives a process restart. A `Map` is
+a demo that dies.
 
 ```ts
-import { listen, sessionToken, type IdentifyRequest } from "socklit/server";
+import {
+  listen,
+  sessionToken,
+  signTicket,
+  verifyTicket,
+  type IdentifyRequest,
+} from "socklit/server";
 
 type Member = { id: string; name: string };
 
-const tickets = new Map<string, Member>();
+const secret = process.env.SOCKLIT_SECRET ?? "";
 
 function identify(request: IdentifyRequest): Member | null {
   const token = sessionToken(request);
   if (!token) return null;
-  return tickets.get(token) ?? null;
+  return verifyTicket<Member>(token, secret);
 }
 
 await listen({
   identify,
+  origin: "https://your.site",
   createApp: (session) => () => App({ store, user: session.user }),
   subscribe: (onChange) => store.onChange(() => onChange(store)),
 });
 ```
 
-`session.user` is whatever `identify` returned, or `null` if the tab is
-signed out. Throw from `identify` to refuse the socket.
+Read `session.user` **inside** the render function
+(`() => App({ user: session.user })`). Do not close over `user` once
+in `createApp` — that value is who connected, not who just signed in.
+
+Throw from `identify` to refuse the socket.
+
+`listen({ origin })` is for production: other origins get 403 on the
+socket and on `POST /session`. Omit it locally.
 
 **2. Issue a token** from a sign-in handler. `grant` tells the replica
 to `POST /session`. `listen` sets an HttpOnly cookie on the page
-origin. Refresh stays signed in. **Every tab in that browser is the
-same person.** Two people means two browsers (or a private window).
+origin. The socket stays up; `useState` is not wiped. Refresh stays
+signed in. **Every tab in that browser is the same person.** Two
+people means two browsers (or a private window).
 
 ```ts
 const MEMBERS: Member[] = [/* your directory — not the store */];
@@ -264,13 +361,12 @@ const MEMBERS: Member[] = [/* your directory — not the store */];
   const name = event.fields["name"]?.trim() ?? "";
   const member = MEMBERS.find((row) => row.name === name);
   if (!member) return;
-  const token = crypto.randomUUID();
-  tickets.set(token, member);
-  session.grant(token);
+  session.grant(signTicket({ id: member.id, name: member.name }, secret));
 }}
 ```
 
-`session.revoke()` drops the token and reconnects signed out.
+`session.revoke()` drops the token and reidentifies on the same
+socket, signed out.
 
 **3. Refuse at the write**, not at the button. Painting a control is
 not permission. A click can arrive late or from a tab that should not
@@ -287,10 +383,9 @@ have the button:
 }}
 ```
 
-A `Map` of tickets dies when the process restarts. Sign the token
-yourself if it has to survive your process. The cookie is just the
-string you passed to `grant`. OAuth, SSO, and a users table are still
-your problem. Socklit binds the connection to a user you already trust.
+The cookie is just the string you passed to `grant`. OAuth, SSO, and a
+users table are still your problem. Socklit binds the connection to a
+user you already trust.
 
 ## Look
 
@@ -304,7 +399,8 @@ An ordinary control is a server template. If it needs a **browser DOM
 that cannot wait for a round trip** — typeahead that filters as you
 type, drag-and-drop, a focus-trapped popover — it is an island.
 
-Three pieces. The name is the same string in all three.
+The contract is hand-written. Three pieces; the name is the same
+string in all three.
 
 **1. Contract** (imported by the server only):
 
@@ -420,24 +516,27 @@ The two import graphs must not mix: the server never imports the
 
 ## `socklit/server` exports
 
-`html`, `component`, `component.tag`, `keyed`, `useState`, `useRef`,
-`useStore`, `createContext`, `useContext`, `createJsonStore`, `JsonStore`,
-`StoreError`, `listen`, `identify` (on `listen`), `sessionToken`, `SESSION_COOKIE`,
-`SESSION_QUERY`, `parseCookies`, `defineIsland`, `mount`, `slot`,
-`IslandServerEvents`, `SessionHandle`, `SessionContext`,
-`IdentifyRequest`, and the event payload types.
+`html`, `component`, `component.tag`, `keyed`, `useState`,
+`useRef`, `useStore`, `createContext`, `useContext`, `changeSource`, `ChangeSource`,
+`createJsonStore`, `JsonStore`, `StoreError`, `signTicket`, `verifyTicket`,
+`listen`, `identify` (on `listen`), `origin` (on `listen`), `PROTOCOL_VERSION`,
+`sessionToken`, `SESSION_COOKIE`, `SESSION_QUERY`, `parseCookies`,
+`defineIsland`, `mount`, `slot`, `IslandServerEvents`, `SessionHandle`,
+`SessionContext`, `IdentifyRequest`, and the event payload types.
 
 `socklit/client` also exports `registerIsland`.
 
-Health is `GET /health` → `{ ok: true, sessions: number }`.
+Health is `GET /health` → `{ ok: true, sessions: number, protocol: 1 }`.
 
 ## If something fails
 
 - **Page empty, status “connecting”.** `listen` is down, or the Vite
-  proxy `target` does not match `{ port }`. `?ws=` is only for a
-  replica that is not same-origin.
+  proxy `target` does not match `{ port }`. Same-origin is the product
+  path. `?ws=ws://localhost:<listen-port>` is only for a replica that
+  is not behind that proxy — cookies will not cross that hop.
 - **`missing #app`.** `index.html` must have an element with `id="app"`.
-- **`plain array`.** You put a JavaScript array in a hole. Use `keyed`.
+- **`plain array`.** You put a JavaScript array in `${…}`. Use `keyed`
+  so each row keeps a stable identity.
 - **Screen goes stale after a store write.** `subscribe` is missing, or
   `useStore` was not called with the same store object.
 - **Unknown tag `<Foo>`.** Nothing called `component.tag("Foo", …)`, or
@@ -446,6 +545,6 @@ Health is `GET /health` → `{ ok: true, sessions: number }`.
   `registerIsland("Name", …)`, or the name does not match `defineIsland`.
 - **Signed in, refresh is a guest.** `identify` did not find the
   cookie (`sessionToken(request)`). The `Map` died with the process,
-  or you are still reading `params.user`.
+  or you are still reading `params.user` instead of the cookie.
 - **Two tabs are different people.** You opened with `?ws=` (the
   fallback is per-tab). Same origin shares the cookie.

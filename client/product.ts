@@ -1,4 +1,8 @@
-import { type ClientMessage, type ServerMessage } from "../shared/protocol";
+import {
+  PROTOCOL_VERSION,
+  type ClientMessage,
+  type ServerMessage,
+} from "../shared/protocol";
 import { registerIsland } from "./island-catalog";
 import "./island-host";
 import { ClientRuntime } from "./runtime";
@@ -12,6 +16,11 @@ const RECONNECT_MAX_MS = 5000;
 const mount = requireElement("app");
 const statusLabel = document.getElementById("status");
 
+mount.addEventListener("socklit:island-error", (event) => {
+  const detail = (event as CustomEvent<{ name: string; message: string }>).detail;
+  setStatus("error", detail?.message ?? "island error");
+});
+
 const query = new URLSearchParams(location.search);
 const explicitProtocol = query.get("ws");
 
@@ -21,6 +30,9 @@ function socketUrl(): string {
   const url = new URL(base);
   for (const [key, value] of query) {
     if (key !== "ws") url.searchParams.set(key, value);
+  }
+  if (!url.searchParams.has("path")) {
+    url.searchParams.set("path", location.pathname);
   }
   // Cross-origin `?ws=` cannot set our cookie. Fall back to the query token.
   if (explicitProtocol) attachSessionToken(url);
@@ -64,7 +76,20 @@ function connect(): void {
       return;
     }
     if (isCredentialMessage(message)) {
-      void persistCredential(message.token).finally(() => active.close());
+      void persistCredential(message.token).finally(() => {
+        if (socket === active && active.readyState === WebSocket.OPEN) {
+          sendMessage(active, { type: "reidentify", token: message.token });
+        }
+      });
+      return;
+    }
+
+    if (
+      message.type === "snapshot" &&
+      message.protocol !== undefined &&
+      message.protocol !== PROTOCOL_VERSION
+    ) {
+      setStatus("error", `unsupported protocol ${message.protocol}`);
       return;
     }
 

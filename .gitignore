@@ -1,8 +1,10 @@
 node_modules/
 dist/
+site/node_modules
+site/dist
 starter/data/
-apps/feedback/data/
-apps/holds/data/
+site/data/
+apps/*/data/
 *.tmp
 *.log
 .DS_Store

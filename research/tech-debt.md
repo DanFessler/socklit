@@ -311,69 +311,341 @@ that builder hit, not guesses.
 
 ### The starter does not contain the product’s actual first app
 
-**What was built.** `starter/` is a per-tab `useState` counter.
-`listen({ subscribe })` + `createJsonStore` lives only as a one-file
-example in `getting-started.md`.
-
-**Why it is safe today.** This is an experiment branch. The lab still
-boots the todo probe.
-
-**What makes it wrong.** A first user whose second tab does not match,
-because they never found the store split across `app.ts` / `server.ts`.
-
-**What retires it.** Put a tiny shared list in the starter. Keep the
-counter as a comment pointing at `useState` = this tab.
-
-### Rejected submits wipe the form, and native validation can skip the handler
-
-**What was built.** The replica paints the template. Unbound inputs keep
-their DOM value across a render (the todo add field). An input with
-`value="1"` snaps back. `@submit` never fires if the browser’s
-`required` / `min` blocks the submit.
-
-**Why it is safe today.** The fridge builder worked around it with
-`useState` flash messages and discovered the snap by using `value=`.
-
-**What makes it wrong.** Any form that validates on the server after the
-user has typed more than one field.
-
-**What retires it.** Document the unbound-input rule in getting-started.
-Decide whether rejected submits need a public draft helper, or whether
-“do not put `value=` on fields you want to keep” is the product. Say
-that `@submit` does not run when native constraint validation fails.
+**Retired.** `starter/` is a shared list (`createJsonStore` + `subscribe`).
 
 ### `mutate`’s `result` is cargo-culted
 
-**What was built.** `mutate` returns `{ next, result }`. The getting-
-started example always uses `result: undefined`.
-
-**Why it is safe today.** Ignoring `result` is correct for fire-and-forget
-handlers.
-
-**What retires it.** One sentence: `result` is the Promise value for the
-caller (`await store.mutate(…)`), not something the replica reads.
+**Retired.** Getting-started says `result` is the Promise value for
+`await store.mutate(…)`. The replica never reads it.
 
 ### An app that installs React gets two copies of it
 
 **What was built.** The replica mounts islands with `react-dom`. The
-getting-started island path says `npm install react react-dom`. The
-starter depends on `socklit` via `file:`, so Vite resolves the host’s
-React from the package and the island’s React from the app.
+starter Vite config `resolve.dedupe`s `react` / `react-dom`. Getting-
+started says so next to `npm install`.
 
-**Why it is safe today.** The lab client registers islands inside the
-same package as the host. First-user apps do not.
+**Why it is safe today.** A copied starter will not hit two Reacts.
 
-**What makes it wrong.** The first `<mount>` is an invalid hook call.
-The page stays “connected.” The row still shows. The widget does not
-paint. A first user who followed the manual exactly hits this.
+**What makes it wrong.** An app that installs React and skips `dedupe`
+(or a published `socklit` that still nests its own React). Invalid hook
+call, page stays “connected,” island dead.
 
-**What retires it.** `react` / `react-dom` as peers of `socklit`, and
-the starter Vite config already `resolve.dedupe`s them. Put that next
-to the `npm install` snippet. A one-file example island would have
-caught this in the template instead of in anger.
+**What retires it.** `react` / `react-dom` as `peerDependencies` when
+the package is published. Until then the Vite line is the contract.
+
+### Rejected submits wipe the form, and native validation can skip the handler
+
+**What was built.** Getting-started documents the unbound-input rule
+and that there is no public draft helper. `@submit` still does not fire
+when the browser’s `required` / `min` blocks the submit — that sentence
+is still missing.
+
+**Why it is safe today.** The add field in the starter is unbound.
+
+**What makes it wrong.** A multi-field form that binds `.value=` so a
+rejected submit looks wiped, or a `min=` that leaves a stale
+`useState` error because the handler never ran.
+
+**What retires it.** The missing `@submit` / constraint-validation
+sentence. Then decide: “do not bind `value=` on fields you want to
+keep” is the product, or there is a public draft helper. Do not do
+both.
 
 ---
 
-*Design rationale for all of the above is in [`proposal.md`](proposal.md).
+## After first-user and the public-site path
+
+Rounds 2–6 plus the local product prep (`file:` install, `listen({
+origin })`, signed tickets, grant-without-reconnect, docs site, Line 47
+in `../socklit-demo`). Grant reconnect, quiet island failure, and
+“store is Postgres” are **not** on this list — those were shipped or
+were stop conditions.
+
+These are the leftovers. Each line is a retirement, not a vibe.
+
+### Path navigation tears the session, so `useState` cannot survive a link
+
+**What was built.** The replica puts `location.pathname` on the socket
+as `session.params.get("path")`. Vite and `listen({ publicDir })`
+serve `index.html` for extension-less paths, so a reload of
+`/compare` still boots. The app switches on that string.
+`<a href="/checkout">` is a real document load: new page, new
+socket, new session.
+
+**Why it is safe today.** The docs site and the starter have no
+per-tab state that must live across a path. Identity is a cookie.
+A shared cart can be a source (`useStore`) or a row on
+`session.user`. Getting-started says this is not a router.
+
+**What makes it wrong.** The first in-memory cart, wizard step, or
+unsaved draft a developer puts in `useState` dies on the next
+`<a href>`. They will expect SPA navigation. Reloading `/checkout`
+with an empty cart is the bug they file. Putting every draft in a
+store makes it everyone’s draft, or forces a user-keyed table
+they did not want yet.
+
+**What retires it.** Keep the socket across a path change:
+`history.pushState` (and back/forward), a protocol message that
+updates `path` on this session, and a re-render. Same
+`useState`, same islands, new tree. Reload of `/checkout` still
+uses today’s connect-time `path`. Until that exists, a value that
+must survive a link is a source or the person, not `useState`.
+
+### Tagged components should take `children`
+
+**What was built.** `component.tag` is a catalog key so you can write
+`<TodoRow .todo=${todo}></TodoRow>`. Bindings must be named holes.
+A tag does not take children — the compiler throws. The function
+call already accepts a `RenderOutput` on any name, including
+`children`. The docs site is `Shell({ path, children: body })`.
+`<mount>` already scoops a body into a synthetic template (`<slot>`).
+
+**Why it is safe today.** The typed spelling is the function call.
+Nobody has to wrap a page in a tag.
+
+**What makes it wrong.** The point of the tag is the visual split:
+properties of the thing vs what slots inside it. We supported the
+representation and then forbade the split. `<Shell .path=${path}>${page}</Shell>`
+is the thing people write. Today they have to leave the template
+and call `Shell({ path, children: page })`.
+
+**What retires it.** In the tag compiler only: the body until
+`</Name>` becomes `props.children` (one `RenderOutput`, same as
+mount’s slot scoop). Refuse `.children=` and a body at once.
+Whitespace-only body stays “no children.” Match nested same-name
+tags by depth. No protocol, no runtime, no `Children.map`. The
+function call does not change. Getting-started: properties are
+bindings; the interior is children.
+
+### Vite hops; the replica attaches to whoever owns the protocol port
+
+**What was built.** Starter Vite is 5173 → listen 8787. Site is 5175 →
+8789. Experiment apps and Line 47 took the next free ports. Vite
+prints `Local:` and moves on. Forget `?ws=` and the replica talks to
+whoever is already on 8787. Health is `{ ok, sessions, protocol }` and
+the replica does not ask it.
+
+**Why it is safe today.** One app on a quiet machine.
+
+**What makes it wrong.** Lobby held 5175; the docs site was told as
+5175; the page said connecting and never painted. Studio already hit
+“silent wrong server.”
+
+**What retires it.**
+
+1. `strictPort: true` on starter and site so a collision is an error,
+   not a lie.
+2. Replica handshake: before applying a snapshot, confirm
+   `protocol` (already on the frame) and that this listen is the app
+   this page thought it was — a name the server advertises on
+   `/health` and the client was built with.
+3. One printed URL. Stop treating 5175 as exclusive in the README.
+
+`?ws=` stays the escape hatch when there is no proxy. Cookies will
+not cross that hop.
+
+### `tsx watch` follows into the host and evicts in-memory tickets
+
+**What was built.** Starter watch excludes `../server/**` (this repo
+next door). A copied app with `"socklit": "file:/ABS/PATH"` does not
+hit those paths; `tsx` will follow into `node_modules/socklit` and
+restart `listen`. A `Map` of tickets dies. The cookie does not.
+
+**Why it is safe today.** Signed tickets survive a restart. The in-repo
+starter exclude is enough for `starter/` inside this repo.
+
+**What makes it wrong.** Lobby’s book was a `Map`. Watch restarted,
+Ada’s cookie still sat her in a chair the process no longer knew.
+They wrote `data/tickets.json` and narrowed the watcher by hand.
+
+**What retires it.** Exclude `node_modules/socklit/**` in the starter
+(and site) watch. Getting-started: if identity is a `Map`, do not let
+the watcher follow the host; if it must survive a restart, use
+`signTicket`. Signed tickets remain the app’s job.
+
+### A no-op `mutate` is silence to the island
+
+**What was built.** Same-reference `mutate` does not write and does
+not notify. Island callbacks return a Promise (`island-result`). The
+Promise value is whatever the server function returned, not “did the
+store change.”
+
+**Why it is safe today.** A server button that no-ops is already
+silence. Checkers illegal-drop “nothing happens” felt honest when
+the square was server markup.
+
+**What makes it wrong.** The island already painted the destination
+(optimistic board, optimistic claim). The store did not move. There
+is no public “the write did nothing” signal. The island has to notice
+that `men` / `ownerId` is unchanged and walk home.
+
+**What retires it.** Pick one and write it down:
+
+- **Snap-back is the contract.** Document it next to the island
+  board sentence. The island diffs the next props. No new API.
+- **An ack.** `mutate` (or the island Promise) reports `{ wrote:
+  boolean }` so a gesture does not have to infer.
+
+Do not leave both in the air. Line 47 and floor hid the illegal
+button and still refused in the write; they never needed the ack.
+Lobby after the board-as-island revision did.
+
+### `createApp` can close over a dead `user`; `revoke` docs still say reconnect
+
+**What was built.** `grant` / `revoke` send `{ type: "credential" }`
+and reidentify on the same socket. `tokenIdentifyRequest` writes the
+new token into both `cookies` and `params`. `createApp` runs once;
+`context.user` is updated in place. Getting-started’s
+`() => App({ user: session.user })` reads at render and is correct.
+`session.revoke()` is still documented as “reconnects signed out.”
+
+**Why it is safe today.** An `identify` that uses `sessionToken(request)`
+sees the synthetic cookie. A render function that reads `session.user`
+sees the new person.
+
+**What makes it wrong.**
+
+- `identify` that only reads `params.get("user")` misses the cookie
+  on reidentify and after refresh.
+- `createApp: (session) => { const user = session.user; return () =>
+  App({ user }); }` keeps the connect-time guest after `grant`.
+- Anyone who still believes revoke tears the tab down will reintroduce
+  the lobby hall-dump.
+
+**What retires it.** Fix the revoke sentence. Every identity example
+uses `sessionToken`. Add the closed-over-`user` anti-example next to
+`createApp`. Do not add a second listen shape.
+
+### `app` vs `createApp` is two listen shapes for one product
+
+**What was built.** Starter uses `app`. Identity needs `createApp`
+so the render can see `session`. Both are public.
+
+**Why it is safe today.** Getting-started shows both. A shared list
+does not need a person.
+
+**What makes it wrong.** Studio had to discover the second shape to
+put a member on the socket. Two recipes, one page.
+
+**What retires it.** One listen recipe in the starter comment: `app`
+until you have `identify`, then `createApp`. Or make `app` receive
+`session` and delete the fork.
+
+### Island local state vs a store notify is undocumented
+
+**What was built.** A patch of the same island hole does not remount
+React. Critique’s `ka` and floor’s `nginx` survived another tab’s
+write. A snapshot resync or a keyed row leaving unmounts the tree.
+
+**Why it is safe today.** It is the correct model and it already
+works.
+
+**What makes it wrong.** Builders design around a remount that does
+not happen (critique almost did). Or they assume the caret always
+survives a full snapshot.
+
+**What retires it.** One paragraph in the island section: local React
+state lives with the hole; a patch keeps it; a remount does not.
+The persist beat after `onPick` (local pick, then the stripe) is the
+same paragraph, not a new API.
+
+### The board-as-island rule is still the overlay sermon
+
+**What was built.** Getting-started says an island is the gesture
+that cannot wait for the wire. Lobby first painted squares as server
+`html` and hid the stale man with a CSS felt cover so the overlay
+death would not flash. That is a cover-up. The revision put the
+whole board in the island, driven by `men` / `onMove`. `play()`
+stayed the referee.
+
+**Why it is safe today.** Typeahead and a swatch tray are not a
+board. They do not need this sentence.
+
+**What makes it wrong.** The next drag app repeats the overlay split
+and the one-frame lie.
+
+**What retires it.** Write the sentence: if the gesture owns the
+cells, the cells are the island. The hall stays server UI. The
+referee is `mutate`, not the drag library. Optimistic paint;
+snap-back when the props do not change (see no-op `mutate` above).
+
+### `registerIsland` types reject a real component
+
+**What was built.** `registerIsland(name, ComponentType<Record<string,
+unknown>>)`. Floor and the docs site cast (`as never`). The runtime
+accepts the component.
+
+**Why it is safe today.** A cast is one line.
+
+**What makes it wrong.** It looks like the island is the wrong shape.
+Builders will “fix” a working widget.
+
+**What retires it.** `registerIsland<P>(name, ComponentType<P>)`.
+
+### App `tsc` follows imports into Socklit
+
+**What was built.** App tsconfigs resolve `socklit/server` to this
+repo’s `.ts`. Floor scored `src/` only because the host reported
+errors in `island-host.ts` / `runtime.ts` / `component.ts`.
+
+**Why it is safe today.** We typecheck the host in this repo.
+
+**What makes it wrong.** A first user’s `tsc` is red for files they
+did not write. They will think they broke the install.
+
+**What retires it.** Published (or `file:`) types that do not pull
+the host sources into the app program — `types` / emitted `.d.ts`,
+and `skipLibCheck` in the starter.
+
+### Island callbacks vs `@click` still teach two spellings
+
+**What was built.** `mount()` types the server closure as
+`(...args, session)`. Getting-started says do not close over `user`.
+Floor started before that sentence and closed over it anyway.
+
+**Why it is safe today.** The type is there. Refuse in `mutate`
+either way.
+
+**What makes it wrong.** A closed-over `user` is the person from the
+last render, not the person who picked. After `grant` without
+reconnect that can be stale in a different way than it used to be.
+
+**What retires it.** The anti-example stays in getting-started (done).
+Handlers that need `SessionHandle<Member>` still want an explicit
+annotation — strict TS does not infer it from `html`. Document the
+annotation; do not invent a typed `html` for this.
+
+### Protocol chrome is still in the starter
+
+**What was built.** Starter `index.html` has the connecting pill.
+The replica writes it. Critique would not show it to a client. The
+docs site uses `#app:empty::before` instead.
+
+**Why it is safe today.** It is how you see a dead listen.
+
+**What makes it wrong.** Every journal called the pill leftover.
+A public page that ships the starter HTML ships “connecting.”
+
+**What retires it.** Hide it by default (CSS or omit the node). Keep
+a documented way to turn it on for local debugging.
+
+### Session handlers do not infer `session`
+
+**What was built.** `@click=${(_event, session) => …}` is untyped
+unless the app writes `SessionHandle<Member>`.
+
+**Why it is safe today.** Runtime passes the live session regardless.
+
+**What makes it wrong.** Strict apps annotate every handler (studio).
+Easy to skip and close over `user` instead.
+
+**What retires it.** Same as the island-callback annotation: show
+`SessionHandle<Member>` once in getting-started. A typed `html` is
+not this ticket.
+
+---
+
+*Design rationale for the research increments is in [`proposal.md`](proposal.md).
 Measurements are in [`design-probes.md`](design-probes.md) and the per-probe
-documents under [`probes/`](probes/).*
+documents under [`probes/`](probes/). First-user evidence is
+[`docs/first-user-experiment.md`](../docs/first-user-experiment.md).*

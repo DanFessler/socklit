@@ -1,0 +1,30 @@
+{
+  "name": "socklit-site",
+  "private": true,
+  "type": "module",
+  "description": "Public Socklit documentation. npm run dev (5175 → listen 8789). After vite build, npm start serves the page and the socket; listen falls unknown paths back to index.html.",
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "tsx watch --exclude '../../server/**' --exclude '../../client/**' --exclude '../../shared/**' src/server.ts",
+    "dev:client": "vite",
+    "build": "vite build",
+    "start": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "highlight.js": "^11.12.0",
+    "lit-html": "^3.3.3",
+    "marked": "^18.0.11",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "socklit": "file:..",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "concurrently": "^10.0.5",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3",
+    "vite": "^8.2.2"
+  }
+}

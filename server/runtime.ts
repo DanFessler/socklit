@@ -1,14 +1,19 @@
+// listen() must pass reidentify that calls identify() with a synthetic IdentifyRequest.
 import { randomUUID } from "node:crypto";
 import type { WebSocket } from "ws";
 
 import {
   MAX_MESSAGE_BYTES,
+  PROTOCOL_VERSION,
   parseClientMessage,
+  parseWireJson,
   type EventMessage,
   type IslandMessage,
+  type ReidentifyMessage,
   type ServerErrorCode,
   type ServerMessage,
   type WireInstance,
+  type WireJson,
   type WireTemplate,
 } from "../shared/protocol";
 import { HookHost, type RenderOutput } from "./component";
@@ -41,12 +46,22 @@ export type App = () => RenderOutput;
  */
 export type AppFactory = (session: SessionContext) => ProbeInstance;
 
+export type ReidentifyFn = (
+  token: string | null,
+  params: URLSearchParams,
+) => unknown | null | Promise<unknown | null>;
+
 export type RuntimeOptions = {
   createApp: AppFactory;
   /** Registers a callback invoked after shared authoritative state changes. */
   subscribe?: (listener: ChangeListener) => () => void;
   onLog?: (message: string) => void;
   metrics?: RuntimeMetrics;
+  /**
+   * listen() must pass reidentify that calls identify() with a synthetic IdentifyRequest.
+   * Also settable later via `setReidentify`.
+   */
+  reidentify?: ReidentifyFn;
 };
 
 type Session = {
@@ -73,6 +88,8 @@ type Session = {
  * A session is the retained server-side execution of the app: it holds the
  * committed instance tree, the closures reachable from that tree, and the
  * revision the browser is known to be showing.
+ *
+ * listen() must pass reidentify that calls identify() with a synthetic IdentifyRequest.
  */
 export class Runtime {
   private readonly createApp: AppFactory;
@@ -85,6 +102,7 @@ export class Runtime {
   private readonly log: (message: string) => void;
   private readonly unsubscribe: () => void;
   private readonly metrics: RuntimeMetrics | undefined;
+  private onReidentify: ReidentifyFn | undefined;
 
   private readonly pendingSessions = new Set<Session>();
   private pendingFlush: Promise<void> | null = null;
@@ -93,8 +111,17 @@ export class Runtime {
     this.createApp = options.createApp;
     this.log = options.onLog ?? (() => {});
     this.metrics = options.metrics;
+    this.onReidentify = options.reidentify;
     this.unsubscribe =
       options.subscribe?.((source) => this.invalidate(source)) ?? (() => {});
+  }
+
+  /**
+   * listen() must call this (or pass `reidentify` to the constructor) so
+   * grant/revoke can update `session.user` without tearing down the socket.
+   */
+  setReidentify(fn: ReidentifyFn): void {
+    this.onReidentify = fn;
   }
 
   get sessionCount(): number {
@@ -299,12 +326,48 @@ export class Runtime {
       return;
     }
 
+    if (message.type === "reidentify") {
+      await this.handleReidentify(session, message);
+      return;
+    }
+
     if (message.type === "island") {
       await this.handleIsland(session, message);
       return;
     }
 
     await this.handleEvent(session, message);
+  }
+
+  /**
+   * Re-run identify on this connection. `useState` and islands stay put.
+   */
+  private async handleReidentify(
+    session: Session,
+    message: ReidentifyMessage,
+  ): Promise<void> {
+    if (!this.onReidentify) {
+      this.log(
+        `session ${session.id} reidentify ignored: listen() did not pass reidentify`,
+      );
+      return;
+    }
+
+    try {
+      const user = await this.onReidentify(
+        message.token,
+        session.context.params,
+      );
+      (session.context as { user: unknown | null }).user = user;
+      this.invalidateSession(session);
+    } catch (error) {
+      this.log(
+        `session ${session.id} reidentify failed: ${describeError(error)}`,
+      );
+      this.sendError(session, "handler_failed", describeError(error), true);
+    }
+
+    await this.flush();
   }
 
   private async handleEvent(
@@ -403,16 +466,30 @@ export class Runtime {
 
     this.metrics?.recordEvent(true);
 
+    let result: WireJson | null = null;
+    let error: string | undefined;
+
     try {
-      await handler(...message.args, session.context);
-    } catch (error) {
-      this.log(
-        `session ${session.id} island handler failed: ${describeError(error)}`,
-      );
-      this.sendError(session, "handler_failed", describeError(error), true);
+      const value = await handler(...message.args, session.context);
+      result = encodeIslandResult(value);
+    } catch (caught) {
+      error = describeError(caught);
+      this.log(`session ${session.id} island handler failed: ${error}`);
+      if (message.call === undefined) {
+        this.sendError(session, "handler_failed", error, true);
+      }
     }
 
     await this.flush();
+
+    if (message.call !== undefined) {
+      this.send(session, {
+        type: "island-result",
+        call: message.call,
+        result: error !== undefined ? null : result,
+        ...(error !== undefined ? { error } : {}),
+      });
+    }
   }
 
   /**
@@ -461,6 +538,7 @@ export class Runtime {
         type: "snapshot",
         revision: session.revision,
         root,
+        protocol: PROTOCOL_VERSION,
       });
       return;
     }
@@ -510,6 +588,7 @@ export class Runtime {
       type: "snapshot",
       revision: session.revision,
       root: session.committedRoot,
+      protocol: PROTOCOL_VERSION,
     });
   }
 
@@ -576,4 +655,11 @@ export class Runtime {
 function describeError(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
+}
+
+/** Same JSON bound as inbound island args. Non-JSON becomes `null`. */
+function encodeIslandResult(value: unknown): WireJson | null {
+  if (value === undefined) return null;
+  const json = parseWireJson(value, 0);
+  return json === undefined ? null : json;
 }

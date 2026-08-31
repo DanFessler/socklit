@@ -5,7 +5,9 @@ import { DEFAULT_PROTOCOL_PORT, MAX_MESSAGE_BYTES } from "../shared/protocol";
 import type { RenderOutput } from "./component";
 import { parseCookies } from "./cookies";
 import type { ChangeListener, ProbeInstance, SessionContext } from "./probes/types";
+import { PROTOCOL_VERSION } from "./protocol-version";
 import { servePublicFile } from "./public-dir";
+import { tokenIdentifyRequest } from "./reidentify";
 import { Runtime } from "./runtime";
 import { readSessionBody, writeSessionCookie } from "./session-cookie";
 
@@ -39,7 +41,7 @@ export type ListenOptions<User = unknown> = {
   identify?: (request: IdentifyRequest) => User | null | Promise<User | null>;
   /**
    * Called when shared authoritative state changes. Return an unsubscribe.
-   * Pass the store as `listener(store)` so `useStore(store)` can skip
+   * Pass the source as `listener(source)` so `useStore(source)` can skip
    * sessions that did not read it.
    */
   subscribe?: (listener: ChangeListener) => () => void;
@@ -49,6 +51,12 @@ export type ListenOptions<User = unknown> = {
    * is the page and the protocol.
    */
   publicDir?: string;
+  /**
+   * Allowed `Origin` values (and, if `Origin` is missing, `Host` as
+   * `http(s)://host`). When set, other origins get 403 on the WebSocket
+   * upgrade and on `POST /session`. Omit locally.
+   */
+  origin?: string | string[];
   port?: number;
   onLog?: (message: string) => void;
 };
@@ -64,7 +72,7 @@ export type ListenHandle = {
  * This is the product host. The research process (`server/index.ts`) still
  * discovers probes; a first-party app does not.
  */
-export function listen<User = unknown>(
+export async function listen<User = unknown>(
   options: ListenOptions<User>,
 ): Promise<ListenHandle> {
   if (options.app && options.createApp) {
@@ -78,11 +86,16 @@ export function listen<User = unknown>(
   const port = options.port ?? Number(process.env["PORT"] ?? DEFAULT_PROTOCOL_PORT);
   const log = options.onLog ?? ((message: string) => console.log(`[socklit] ${message}`));
   const publicDir = options.publicDir;
+  const identify = options.identify;
 
   const runtime = new Runtime({
     createApp,
     ...(options.subscribe ? { subscribe: options.subscribe } : {}),
     onLog: log,
+    reidentify: async (token, params) => {
+      if (!identify) return null;
+      return identify(tokenIdentifyRequest(token, params, {}));
+    },
   });
 
   const server = createServer((request, response) => {
@@ -96,11 +109,19 @@ export function listen<User = unknown>(
     const url = new URL(request.url ?? "/", `http://${request.headers.host}`);
 
     if (url.pathname === "/health") {
-      json(response, 200, { ok: true, sessions: runtime.sessionCount });
+      json(response, 200, {
+        ok: true,
+        sessions: runtime.sessionCount,
+        protocol: PROTOCOL_VERSION,
+      });
       return;
     }
 
     if (url.pathname === "/session" && request.method === "POST") {
+      if (!originAllowed(request, options.origin)) {
+        json(response, 403, { error: "origin not allowed" });
+        return;
+      }
       try {
         const token = await readSessionBody(request);
         writeSessionCookie(response, request, token);
@@ -120,7 +141,17 @@ export function listen<User = unknown>(
     json(response, 404, { error: "this process serves the session protocol" });
   }
 
-  const sockets = new WebSocketServer({ server, maxPayload: MAX_MESSAGE_BYTES });
+  const sockets = new WebSocketServer({ noServer: true, maxPayload: MAX_MESSAGE_BYTES });
+  server.on("upgrade", (request, socket, head) => {
+    if (!originAllowed(request, options.origin)) {
+      socket.write("HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+    sockets.handleUpgrade(request, socket, head, (ws) => {
+      sockets.emit("connection", ws, request);
+    });
+  });
   sockets.on("connection", (socket, request) => {
     const url = new URL(request.url ?? "/", `http://${request.headers.host}`);
     const identifyRequest: IdentifyRequest = {
@@ -157,7 +188,14 @@ export function listen<User = unknown>(
           }),
       });
     });
-    server.on("error", reject);
+    server.on("error", (error: NodeJS.ErrnoException) => {
+      if (error.code === "EADDRINUSE") {
+        log(
+          `port ${port} is already in use. Change listen({ port }) and the Vite proxy target together.`,
+        );
+      }
+      reject(error);
+    });
   });
 }
 
@@ -187,6 +225,28 @@ function normalizeCreateApp<User>(
     if (typeof result === "function") return { app: result };
     return result;
   };
+}
+
+function originAllowed(
+  request: IncomingMessage,
+  allowed?: string | string[],
+): boolean {
+  if (!allowed) return true;
+  const actual = requestOrigin(request);
+  if (!actual) return false;
+  const list = Array.isArray(allowed) ? allowed : [allowed];
+  return list.includes(actual);
+}
+
+function requestOrigin(request: IncomingMessage): string | undefined {
+  const header = request.headers.origin;
+  if (typeof header === "string" && header.length > 0) return header;
+  const host = request.headers.host;
+  if (!host) return undefined;
+  const forwarded = request.headers["x-forwarded-proto"];
+  const encrypted = Boolean((request.socket as { encrypted?: boolean }).encrypted);
+  const proto = forwarded === "https" || encrypted ? "https" : "http";
+  return `${proto}://${host}`;
 }
 
 function json(

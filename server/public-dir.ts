@@ -42,19 +42,40 @@ export async function servePublicFile(
     return true;
   }
 
+  if (await sendFile(resolved, request, response)) return true;
+
+  // Extension-less paths are SPA routes (`/guide`). Keep `/ws`, `/session`,
+  // and `/health` out of this function so they never receive index.html.
+  if (path.posix.extname(url.pathname) !== "") return false;
+
+  const index = path.resolve(root, "index.html");
+  if (index !== rootResolved && !index.startsWith(rootResolved + path.sep)) {
+    response.writeHead(403);
+    response.end();
+    return true;
+  }
+
+  return sendFile(index, request, response);
+}
+
+async function sendFile(
+  file: string,
+  request: IncomingMessage,
+  response: ServerResponse,
+): Promise<boolean> {
   try {
-    const info = await stat(resolved);
+    const info = await stat(file);
     if (!info.isFile()) return false;
   } catch {
     return false;
   }
 
-  const type = TYPES[path.extname(resolved).toLowerCase()] ?? "application/octet-stream";
+  const type = TYPES[path.extname(file).toLowerCase()] ?? "application/octet-stream";
   response.writeHead(200, { "content-type": type });
   if (request.method === "HEAD") {
     response.end();
     return true;
   }
-  createReadStream(resolved).pipe(response);
+  createReadStream(file).pipe(response);
   return true;
 }

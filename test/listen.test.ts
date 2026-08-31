@@ -49,7 +49,7 @@ describe("listen()", () => {
     });
 
     const response = await fetch(`http://127.0.0.1:${handle.port}/health`);
-    expect(await response.json()).toEqual({ ok: true, sessions: 0 });
+    expect(await response.json()).toEqual({ ok: true, sessions: 0, protocol: 1 });
   });
 
   it("passes identify's user into createApp", async () => {
@@ -179,6 +179,41 @@ describe("listen()", () => {
     const response = await fetch(`http://127.0.0.1:${handle.port}/`);
     expect(response.status).toBe(200);
     expect(await response.text()).toContain("built");
+  });
+
+  it("rejects POST /session from a disallowed Origin", async () => {
+    handle = await listen({
+      app: () => Hello({}),
+      origin: "https://app.example",
+      port: 0,
+      onLog: () => undefined,
+    });
+
+    const response = await fetch(`http://127.0.0.1:${handle.port}/session`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: "https://evil.example",
+      },
+      body: JSON.stringify({ token: "ticket-1" }),
+    });
+    expect(response.status).toBe(403);
+  });
+
+  it("falls back to index.html for a missing public path", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "socklit-spa-"));
+    await writeFile(path.join(root, "index.html"), "<!doctype html><p>spa</p>");
+
+    handle = await listen({
+      app: () => Hello({}),
+      publicDir: root,
+      port: 0,
+      onLog: () => undefined,
+    });
+
+    const response = await fetch(`http://127.0.0.1:${handle.port}/guide`);
+    expect(response.status).toBe(200);
+    expect(await response.text()).toContain("spa");
   });
 });
 

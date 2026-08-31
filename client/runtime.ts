@@ -2,6 +2,7 @@ import { html, nothing, render, type TemplateResult } from "lit-html";
 import { repeat } from "lit-html/directives/repeat.js";
 
 import { focusTarget } from "./focus";
+import { finish } from "./island-calls";
 import type { IslandBridge } from "./island-host";
 import {
   isWireEventValue,
@@ -92,6 +93,10 @@ export class ClientRuntime {
         return;
 
       case "credential":
+        return;
+
+      case "island-result":
+        finish(message.call, message.result, message.error);
         return;
     }
   }

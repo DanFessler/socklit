@@ -24,10 +24,11 @@ export type SessionHandle<User = unknown> = {
   readonly user: User | null;
   /**
    * Give this browser a token. The replica POSTs `/session` (HttpOnly
-   * cookie on the page origin) and reconnects. Every tab in that browser
-   * is then the same person. The `?ws=` fallback still uses sessionStorage.
+   * cookie on the page origin) and re-identifies this connection. `useState`
+   * and islands survive. Every tab in that browser is then the same person
+   * on the next connect. The `?ws=` fallback still uses sessionStorage.
    */
   grant: (token: string) => void;
-  /** Drop the cookie (or the fallback token) and reconnect signed out. */
+  /** Drop the cookie (or the fallback token) and re-identify this connection signed out. */
   revoke: () => void;
 };

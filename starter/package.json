@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
-    "dev:server": "tsx watch src/server.ts",
+    "dev:server": "tsx watch --exclude '../server/**' --exclude '../client/**' --exclude '../shared/**' src/server.ts",
     "dev:client": "vite",
     "build": "vite build",
     "start": "tsx src/server.ts"

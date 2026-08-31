@@ -6,6 +6,7 @@
  */
 
 export const DEFAULT_PROTOCOL_PORT = 8787;
+export const PROTOCOL_VERSION = 1;
 export const MAX_MESSAGE_BYTES = 16 * 1024;
 export const MAX_HOLE_INDEX = 255;
 export const MAX_SUBMIT_FIELDS = 64;
@@ -125,7 +126,12 @@ export const SESSION_QUERY = SESSION_COOKIE;
 
 export type ServerMessage =
   | { type: "templates"; templates: WireTemplate[] }
-  | { type: "snapshot"; revision: number; root: WireInstance }
+  | {
+      type: "snapshot";
+      revision: number;
+      root: WireInstance;
+      protocol: number;
+    }
   | {
       type: "update";
       revision: number;
@@ -142,6 +148,12 @@ export type ServerMessage =
       type: "credential";
       /** Opaque token for `identify`. `null` signs this tab out. */
       token: string | null;
+    }
+  | {
+      type: "island-result";
+      call: number;
+      result: WireJson | null;
+      error?: string;
     };
 
 export type ClickPayload = { kind: "click" };
@@ -211,9 +223,22 @@ export type IslandMessage = {
   hole: number;
   event: string;
   args: WireJson[];
+  /** Positive int; the replica waits for `island-result` with this id. */
+  call?: number;
 };
 
-export type ClientMessage = EventMessage | IslandMessage;
+/**
+ * Re-run `identify` on this connection after `grant` / `revoke`.
+ *
+ * Not an addressed event: there is no instance or hole. The replica keeps
+ * the socket; `useState` and islands survive.
+ */
+export type ReidentifyMessage = {
+  type: "reidentify";
+  token: string | null;
+};
+
+export type ClientMessage = EventMessage | IslandMessage | ReidentifyMessage;
 
 export function isWireEventValue(value: WireValue): value is WireEventValue {
   return isTaggedValue(value) && value.kind === "event";
@@ -284,6 +309,10 @@ export function parseClientMessage(raw: string): ClientMessage | null {
 
   if (!isRecord(parsed)) return null;
 
+  if (parsed["type"] === "reidentify") {
+    return parseReidentifyMessage(parsed);
+  }
+
   const address = parseAddress(parsed);
   if (!address) return null;
 
@@ -343,7 +372,21 @@ function parseIslandMessage(
     sanitized.push(json);
   }
 
+  const call = parsed["call"];
+  if (call !== undefined) {
+    if (!isIndex(call) || call < 1) return null;
+    return { type: "island", ...address, event, args: sanitized, call };
+  }
+
   return { type: "island", ...address, event, args: sanitized };
+}
+
+function parseReidentifyMessage(
+  parsed: Record<string, unknown>,
+): ReidentifyMessage | null {
+  const token = parsed["token"];
+  if (token !== null && typeof token !== "string") return null;
+  return { type: "reidentify", token };
 }
 
 /**

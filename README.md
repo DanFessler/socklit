@@ -1,18 +1,20 @@
 # Socklit
 
-A prototype of a server-authoritative UI runtime. The server retains a live
-application instance per connection, and the browser is a replica that renders
-what it is told and forwards interaction back.
-
-The application is written like local UI code:
+A server-authoritative UI runtime. You write components next to your data.
+The browser is a replica: it paints the templates it is given and sends
+clicks back as addresses. There is no REST handler for a button.
 
 ```ts
-html`<button @click=${() => db.todos.remove(todo.id)}>Delete</button>`
+html`<button @click=${() => store.remove(todo.id)}>Delete</button>`
 ```
 
-There is no endpoint, no fetch, no request or response type, and no client
-cache. The click handler runs on the server because that is where it already
-lives, next to the data.
+**New app.** Copy `starter/`, point `"socklit"` at this repo (`file:`),
+`npm install && npm run dev`, open <http://localhost:5173>. One origin.
+Guide: [`docs/getting-started.md`](docs/getting-started.md). Docs site:
+`cd site && npm run dev`, then the `Local:` URL Vite prints.
+
+**This repo.** `npm install && npm run dev` is still the research lab
+(probes, protocol panel, two ports). That is not the product path.
 
 ## The idea in one paragraph
 

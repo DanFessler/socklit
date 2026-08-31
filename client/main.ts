@@ -1,5 +1,6 @@
 import {
   DEFAULT_PROTOCOL_PORT,
+  PROTOCOL_VERSION,
   type ClientMessage,
   type ServerMessage,
 } from "../shared/protocol";
@@ -27,6 +28,11 @@ const RECONNECT_MAX_MS = 5000;
 
 const mount = requireElement("app");
 const statusLabel = requireElement("status");
+
+mount.addEventListener("socklit:island-error", (event) => {
+  const detail = (event as CustomEvent<{ name: string; message: string }>).detail;
+  setStatus("error", detail?.message ?? "island error");
+});
 const revisionLabel = requireElement("revision");
 const perceivedLabel = requireElement("perceived");
 const latencySelect = requireElement("latency") as HTMLSelectElement;
@@ -176,7 +182,18 @@ function deliverInbound({ message, bytes }: InboundFrame): void {
 
   if (isCredentialMessage(message)) {
     writeSessionToken(message.token);
-    socket?.close();
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      sendMessage(socket, { type: "reidentify", token: message.token });
+    }
+    return;
+  }
+
+  if (
+    message.type === "snapshot" &&
+    message.protocol !== undefined &&
+    message.protocol !== PROTOCOL_VERSION
+  ) {
+    setStatus("error", `unsupported protocol ${message.protocol}`);
     return;
   }
 

@@ -1,15 +1,14 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
-/** Installed `socklit` (`file:..` in this repo, or `file:/ABS/PATH` after a copy). */
-const socklitRoot = fileURLToPath(new URL("node_modules/socklit", import.meta.url));
+const socklitRoot = fileURLToPath(new URL("..", import.meta.url));
 
-/** Must match `listen()` (8787, or `PORT`, or `{ port }`). */
-const protocolPort = 8787;
+/** Must match `listen()` (8789, or `PORT`, or `{ port }`). */
+const protocolPort = 8789;
 
 export default defineConfig({
   server: {
-    port: 5173,
+    port: 5175,
     fs: { allow: [socklitRoot] },
     proxy: {
       "/ws": { target: `http://127.0.0.1:${protocolPort}`, ws: true },
@@ -18,7 +17,6 @@ export default defineConfig({
     },
   },
   resolve: {
-    // The replica and any island you register must share one React.
     dedupe: ["react", "react-dom"],
   },
 });

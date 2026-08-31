@@ -28,6 +28,10 @@ export {
   type JsonStoreOptions,
 } from "./json-store";
 
+export { changeSource, ChangeSource } from "./source";
+export { signTicket, verifyTicket } from "./ticket";
+export { PROTOCOL_VERSION } from "./protocol-version";
+
 export { listen, type IdentifyRequest, type ListenHandle, type ListenOptions } from "./listen";
 
 export { parseCookies } from "./cookies";

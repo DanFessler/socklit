@@ -2,6 +2,7 @@ import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
 import { lookupIsland } from "./island-catalog";
+import { nextIslandCall, wait } from "./island-calls";
 import { IslandAddressContext } from "../islands/slot";
 import type {
   ClientMessage,
@@ -77,7 +78,7 @@ class SocklitIsland extends HTMLElement {
     const { instanceId, hole, value } = this.#spec;
     const Component = lookupIsland(value.name);
     if (!Component) {
-      this.textContent = `unknown island: ${value.name}`;
+      this.#fail(value.name, `unknown island: ${value.name}`);
       return;
     }
 
@@ -89,8 +90,10 @@ class SocklitIsland extends HTMLElement {
         const encoded = encodeArgs(args);
         if (!encoded) {
           console.error(`island ${value.name}.${name} received a non-JSON argument`);
-          return;
+          return Promise.reject(new Error("non-JSON argument"));
         }
+        const call = nextIslandCall();
+        const result = wait(call);
         bridge.send({
           type: "island",
           revision: bridge.revision(),
@@ -98,7 +101,9 @@ class SocklitIsland extends HTMLElement {
           hole: spec.hole,
           event: name,
           args: encoded,
+          call,
         });
+        return result;
       };
     }
 
@@ -115,14 +120,21 @@ class SocklitIsland extends HTMLElement {
     // commit can claim itself from connectedCallback. Paint afterwards so
     // a React update cannot leave the well empty — React owns the custom
     // element, the replica owns what is inside it.
-    this.#root ??= createRoot(this);
-    this.#root.render(
-      createElement(
-        IslandAddressContext.Provider,
-        { value: { instanceId, hole } },
-        createElement(Component, props),
-      ),
-    );
+    try {
+      delete this.dataset.error;
+      this.#root ??= createRoot(this);
+      this.#root.render(
+        createElement(
+          IslandAddressContext.Provider,
+          { value: { instanceId, hole } },
+          createElement(Component, props),
+        ),
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.#fail(value.name, message);
+      return;
+    }
 
     const paint = painters.get(key);
     if (paint) {
@@ -136,6 +148,19 @@ class SocklitIsland extends HTMLElement {
         }
       }
     }
+  }
+
+  #fail(name: string, message: string): void {
+    this.#root?.unmount();
+    this.#root = null;
+    this.dataset.error = message;
+    this.textContent = message;
+    this.dispatchEvent(
+      new CustomEvent("socklit:island-error", {
+        bubbles: true,
+        detail: { name, message },
+      }),
+    );
   }
 }
 
