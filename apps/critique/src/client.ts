@@ -6,6 +6,4 @@ import { ReviewerPicker } from "./reviewer-picker.island";
 registerIsland("ColorPalette", ColorPalette);
 registerIsland("ReviewerPicker", ReviewerPicker);
 
-import "socklit/client/styles.css";
-import "./critique.css";
 import "socklit/client";

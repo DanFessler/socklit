@@ -18,10 +18,12 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:5173>. That is the only URL.
+Open <http://localhost:5173>. That is the only URL. Vite serves
+modules; the HTML is a `listen()` render (`firstPaint` in
+`vite.config.ts`). Disable JavaScript and the page is still there.
 
-If you change `listen({ port })`, change the Vite proxy `target` in
-`vite.config.ts` to match. After `npm run build`,
+If you change `listen({ port })`, change the Vite proxy `target` and
+`firstPaint({ port })` in `vite.config.ts` to match. After `npm run build`,
 `listen({ publicDir: "dist" })` serves the page and the socket from one
 process (`npm start`). HTTPS is still your reverse proxy, not this
 process.
@@ -38,8 +40,9 @@ the tree (the server restarts on save; the client reconnects).
 | --- | --- |
 | `src/app.ts` | The UI and, if you have one, the store |
 | `src/server.ts` | `listen({ app, subscribe })` |
-| `src/client.ts` | Loads the replica (do not put app logic here) |
-| `index.html` | Must contain `<main id="app">` |
+| `src/client.ts` | Loads the replica (do not put app logic or CSS here) |
+| `src/styles.css` | The document’s look. `@import` `socklit/client/styles.css` |
+| `index.html` | Must contain `<main id="app">` and `<link>` the stylesheet |
 
 The starter is already a **shared list**. `app.ts` creates the store and
 the component. `server.ts` is the wiring:
@@ -62,8 +65,8 @@ appears in both. That is the store + `subscribe` line, not `useState`.
 The replica puts the page path on the socket as
 `session.params.get("path")`. Vite (and `listen({ publicDir })` after a
 build) serves `index.html` for paths that are not a real file, so a
-reload of `/compare` still boots the replica. Your app switches on that
-path:
+reload of `/compare` still boots the replica. The HTML is already a
+`listen()` render of that path. Your app switches on it:
 
 ```ts
 await listen({
@@ -393,9 +396,14 @@ user you already trust.
 
 ## Look
 
-`socklit/client/styles.css` is the whole default look. Classes the
-starter uses: `app-header`, `add-form`, `primary`, `item-list`, `item`,
-`empty`. You can write ordinary markup next to them.
+`socklit/client/styles.css` is the whole default look. Link it from
+`index.html` — do not import it from `client.ts`. After a build,
+`listen({ publicDir })` serves that same `<link>` next to the painted
+tree. Disable JavaScript and the page is still dressed.
+
+Classes the starter uses: `app-header`, `add-form`, `primary`,
+`item-list`, `item`, `empty`. You can write ordinary markup next to
+them.
 
 ## Islands
 
@@ -494,7 +502,6 @@ import { StaffPicker } from "./staff-picker.island";
 
 registerIsland("StaffPicker", StaffPicker);
 
-import "socklit/client/styles.css";
 import "socklit/client";
 ```
 
@@ -523,14 +530,20 @@ The two import graphs must not mix: the server never imports the
 `html`, `component`, `component.tag`, `keyed`, `useState`, `useDurable`,
 `useRef`, `useStore`, `createContext`, `useContext`, `changeSource`, `ChangeSource`,
 `createJsonStore`, `JsonStore`, `StoreError`, `signTicket`, `verifyTicket`,
-`listen`, `identify` (on `listen`), `origin` (on `listen`), `PROTOCOL_VERSION`,
+`listen`, `identify` (on `listen`), `origin` (on `listen`), `name` (on `listen`),
+`Health`, `PROTOCOL_VERSION`,
 `sessionToken`, `SESSION_COOKIE`, `SESSION_QUERY`, `TAB_QUERY`, `parseCookies`,
 `defineIsland`, `mount`, `slot`, `IslandServerEvents`, `SessionHandle`,
 `SessionContext`, `IdentifyRequest`, and the event payload types.
 
-`socklit/client` also exports `registerIsland`.
+`socklit/client` also exports `registerIsland`. `socklit/vite` exports
+`firstPaint`.
 
-Health is `GET /health` → `{ ok: true, sessions: number, protocol: 1 }`.
+Health is `GET /health` →
+`{ ok, name, sessions, protocol }`. `name` is `listen({ name })` or
+`package.json` `"name"`. The replica and `firstPaint()` refuse a
+different name, so a leftover process on the protocol port cannot
+become the app.
 
 ## If something fails
 
@@ -538,6 +551,11 @@ Health is `GET /health` → `{ ok: true, sessions: number, protocol: 1 }`.
   proxy `target` does not match `{ port }`. Same-origin is the product
   path. `?ws=ws://localhost:<listen-port>` is only for a replica that
   is not behind that proxy — cookies will not cross that hop.
+- **Status names two apps.** The page’s `package.json` name (or
+  `firstPaint({ name })`) does not match `listen({ name })` on that
+  port. You are talking to a leftover process. Kill it, or change
+  the port pair. Vite `strictPort` means a taken 5173 is an error,
+  not a hop to 5174.
 - **`missing #app`.** `index.html` must have an element with `id="app"`.
 - **`plain array`.** You put a JavaScript array in `${…}`. Use `keyed`
   so each row keeps a stable identity.

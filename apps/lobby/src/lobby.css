@@ -1,3 +1,5 @@
+@import "socklit/client/styles.css";
+
 :root {
   --felt: #1b3d2f;
   --felt-deep: #12261d;

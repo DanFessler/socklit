@@ -168,11 +168,15 @@ export const Guide = component(function Guide() {
       ${snippet(DEV, "bash")}
       <p>
         Open <a href="http://localhost:5173">http://localhost:5173</a>. That
-        is the only URL.
+        is the only URL. Vite serves modules; the HTML is a
+        <code>listen()</code> render (<code>firstPaint</code> in
+        <code>vite.config.ts</code>). Disable JavaScript and the page is
+        still there.
       </p>
       <p>
         If you change <code>listen({ port })</code>, change the Vite proxy
-        <code>target</code> in <code>vite.config.ts</code> to match. After
+        <code>target</code> and <code>firstPaint({ port })</code> in
+        <code>vite.config.ts</code> to match. After
         <code>npm run build</code>,
         <code>listen({ publicDir: "dist" })</code> serves the page and the
         socket from one process (<code>npm start</code>). HTTPS is still
@@ -204,11 +208,15 @@ export const Guide = component(function Guide() {
           </tr>
           <tr>
             <td><code>src/client.ts</code></td>
-            <td>Loads the replica. Do not put app logic here.</td>
+            <td>Loads the replica. Do not put app logic or CSS here.</td>
+          </tr>
+          <tr>
+            <td><code>src/styles.css</code></td>
+            <td>The document’s look. <code>@import</code> socklit/client/styles.css</td>
           </tr>
           <tr>
             <td><code>index.html</code></td>
-            <td>Must contain <code>&lt;main id="app"&gt;</code></td>
+            <td>Must contain <code>&lt;main id="app"&gt;</code> and <code>&lt;link&gt;</code> the stylesheet</td>
           </tr>
         </tbody>
       </table>
@@ -229,8 +237,9 @@ export const Guide = component(function Guide() {
         <code>session.params.get("path")</code>. Vite (and
         <code>listen({ publicDir })</code> after a build) serves
         <code>index.html</code> for paths that are not a real file, so a
-        reload of <code>/compare</code> still boots the replica. Your app
-        switches on that path:
+        reload of <code>/compare</code> still boots the replica. The HTML
+        is already a <code>listen()</code> render of that path. Your app
+        switches on it:
       </p>
       ${snippet(PATH)}
       <p>

@@ -433,13 +433,10 @@ the replica does not ask it.
 
 **What retires it.**
 
-1. `strictPort: true` on starter and site so a collision is an error,
-   not a lie.
-2. Replica handshake: before applying a snapshot, confirm
-   `protocol` (already on the frame) and that this listen is the app
-   this page thought it was — a name the server advertises on
-   `/health` and the client was built with.
-3. One printed URL. Stop treating 5175 as exclusive in the README.
+Shipped. `/health.name` is `listen({ name })` or `package.json`
+`"name"`. The replica and `firstPaint()` refuse a mismatch. Vite
+`strictPort` is on the starter, the lab, and first-party apps. A
+taken 5173 is an error, not a hop. `?ws=` stays the escape hatch.
 
 `?ws=` stays the escape hatch when there is no proxy. Cookies will
 not cross that hop.

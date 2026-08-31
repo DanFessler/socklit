@@ -14,7 +14,8 @@
     "./server": "./server/public.ts",
     "./client": "./client/product.ts",
     "./client/islands": "./client/island-catalog.ts",
-    "./client/styles.css": "./client/product.css"
+    "./client/styles.css": "./client/product.css",
+    "./vite": "./server/vite-plugin.ts"
   },
   "scripts": {
     "dev": "concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",

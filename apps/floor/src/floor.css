@@ -1,3 +1,5 @@
+@import "socklit/client/styles.css";
+
 :root {
   --floor-ink: #e8edf5;
   --floor-muted: #8b97ab;

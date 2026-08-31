@@ -3,7 +3,7 @@ export type CatalogStatus = "shipped" | "planned";
 export type CatalogEntry = {
   id: string;
   name: string;
-  module: "socklit/server" | "socklit/client";
+  module: "socklit/server" | "socklit/client" | "socklit/vite";
   signature: string;
   meaning: string;
   example?: string;
@@ -59,8 +59,8 @@ export const API_SECTIONS: CatalogSection[] = [
     id: "host",
     title: "Host",
     intro:
-      "listen() starts the session protocol. Getting-started is one URL: Vite proxies /ws, /session, and /health to this process. After a build, publicDir serves the page next to the socket.",
-    entries: ["listen", "ListenOptions", "ListenHandle", "listen.origin"],
+      "listen() starts the session protocol. Getting-started is one URL: Vite proxies /ws, /session, and /health to this process. The HTML is a listen() render — firstPaint() in socklit/vite in dev, publicDir after a build.",
+    entries: ["listen", "firstPaint", "Health", "ListenOptions", "ListenHandle", "listen.origin"],
   },
   {
     id: "session",
@@ -134,8 +134,9 @@ export function groupCatalog(entries: CatalogEntry[]): {
 }
 
 /**
- * Every public export from `socklit/server` and `socklit/client`, plus
- * names we can add when the files exist. Planned entries are not imports.
+ * Every public export from `socklit/server`, `socklit/client`, and
+ * `socklit/vite`, plus names we can add when the files exist.
+ * Planned entries are not imports.
  */
 export const CATALOG: CatalogEntry[] = [
   {
@@ -330,12 +331,36 @@ const theme = useContext(Theme);`,
     module: "socklit/server",
     signature: "listen<User>(options: ListenOptions<User>): Promise<ListenHandle>",
     meaning:
-      "Starts the session protocol: WebSocket /ws, POST /session, GET /health. Pass app for one render function, or createApp(session) when the tree depends on the connection (route, identity). subscribe tells the runtime when shared state changed. publicDir serves a built page next to the socket after vite build. Default port is 8787, or PORT, or { port }.",
+      "Starts the session protocol: WebSocket /ws, POST /session, GET /health. A GET of the page is a render into #app. /health.name is listen({ name }) or package.json name — the replica and firstPaint refuse a different process on this port. Pass app for one render function, or createApp(session) when the tree depends on the connection (route, identity). subscribe tells the runtime when shared state changed. publicDir serves a built page next to the socket after vite build. In npm run dev, firstPaint() from socklit/vite puts that same render in Vite's HTML. Default port is 8787, or PORT, or { port }.",
     example: `await listen({
   app: () => App({ store }),
   subscribe: (onChange) => store.onChange(() => onChange(store)),
   publicDir: "dist",
 });`,
+    status: "shipped",
+  },
+  {
+    id: "firstPaint",
+    name: "firstPaint",
+    module: "socklit/vite",
+    signature: "firstPaint(options?: { port?: number; name?: string }): Plugin",
+    meaning:
+      "Vite plugin for npm run dev. Vite still serves modules and HMR. The HTML it returns is a listen() GET written into #app — the same document npm start sends. Bakes package.json name (or { name }) into the replica so a leftover on the protocol port is refused. port must match listen({ port }). ?paint=shell is the empty control.",
+    example: `import { firstPaint } from "socklit/vite";
+
+export default defineConfig({
+  plugins: [firstPaint({ port: 8787 })],
+  server: { strictPort: true },
+});`,
+    status: "shipped",
+  },
+  {
+    id: "Health",
+    name: "Health",
+    module: "socklit/server",
+    signature: "type Health = { ok: true; name: string; sessions: number; protocol: number }",
+    meaning:
+      "GET /health. name is listen({ name }) or package.json name. The replica and firstPaint refuse a process whose name differs, so a leftover on this port cannot become the app.",
     status: "shipped",
   },
   {
@@ -434,9 +459,9 @@ await listen({
     name: "ListenOptions",
     module: "socklit/server",
     signature:
-      "type ListenOptions<User> = { app?: () => RenderOutput; createApp?: CreateApp<User>; identify?: …; subscribe?: (listener: ChangeListener) => () => void; publicDir?: string; durableFile?: string; port?: number; onLog?: (message: string) => void }",
+      "type ListenOptions<User> = { app?: () => RenderOutput; createApp?: CreateApp<User>; identify?: …; subscribe?: (listener: ChangeListener) => () => void; publicDir?: string; durableFile?: string; name?: string; port?: number; onLog?: (message: string) => void }",
     meaning:
-      "listen() takes app or createApp, not both. subscribe should call listener(store) so useStore(store) can skip sessions that did not read it. publicDir is a built-files directory (usually dist/) served next to the socket. durableFile is the JSON file for useDurable cells — omit and reconnect still works, a process exit does not.",
+      "listen() takes app or createApp, not both. name is who this process is on /health (default: package.json name). subscribe should call listener(store) so useStore(store) can skip sessions that did not read it. publicDir is a built-files directory (usually dist/) served next to the socket. durableFile is the JSON file for useDurable cells — omit and reconnect still works, a process exit does not.",
     status: "shipped",
   },
   {

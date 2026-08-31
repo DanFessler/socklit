@@ -23,10 +23,12 @@ npm install
 npm run dev
 ```
 
-4. Open <http://localhost:5173>. That is the only URL.
+4. Open <http://localhost:5173>. That is the only URL. Vite serves
+   modules; the HTML is a `listen()` render. Disable JavaScript and
+   the page is still there.
 
-If you change `listen({ port })`, change the Vite proxy `target` in
-`vite.config.ts` to match.
+If you change `listen({ port })`, change the Vite proxy `target` and
+`firstPaint({ port })` in `vite.config.ts` to match.
 
 Two people means two browsers on that origin. The list is the store,
 not per-tab state. A second tab on your machine is the same check.
@@ -56,8 +58,9 @@ the dedupe and the first mount is an invalid hook call.
 | --- | --- |
 | `src/app.ts` | The UI and the store |
 | `src/server.ts` | `listen({ app, subscribe, publicDir })` |
-| `src/client.ts` | Loads the replica (do not put app logic here) |
-| `index.html` | Must contain `<main id="app">` |
+| `src/client.ts` | Loads the replica (do not put app logic or CSS here) |
+| `src/styles.css` | The document’s look |
+| `index.html` | Must contain `<main id="app">` and `<link>` the stylesheet |
 
 You import `socklit/server` and `socklit/client`. You do not import
 files from inside the Socklit repo.
