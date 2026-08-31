@@ -1,5 +1,10 @@
 import type { TemplateResult } from "lit-html";
 
+import {
+  cloneJson,
+  durableCellKey,
+  type DurableVault,
+} from "./durable";
 import { bindTag } from "./registry";
 
 /**
@@ -270,7 +275,35 @@ type StateSlot = {
    */
   setter: unknown;
 };
-type Slot = StateSlot | RefSlot;
+type DurableSlot = {
+  kind: "durable";
+  key: string;
+  setter: unknown;
+};
+
+type Slot = StateSlot | RefSlot | DurableSlot;
+
+export type DurableShare = "tab" | "user";
+
+export type DurableOptions = {
+  /**
+   * `tab` (default): this window. Reconnect and refresh keep the value.
+   * A second tab has its own. `user`: every tab of this person shares it.
+   */
+  share?: DurableShare;
+};
+
+/**
+ * How `useDurable` finds the vault and who this connection is.
+ *
+ * The runtime owns the vault. Identity and tab are read on each call so a
+ * `grant` can move the cell without rebuilding the host.
+ */
+export type DurableBinding = {
+  vault: DurableVault;
+  identity: () => string | null;
+  tab: () => string | null;
+};
 
 type Entry = {
   key: string;
@@ -324,6 +357,9 @@ const NO_READS: ReadonlySet<unknown> = new Set();
 export class HookHost {
   private readonly entries = new Map<string, Entry>();
   private readonly onInvalidate: () => void;
+  private readonly durable: DurableBinding | null;
+  private readonly durableUnsubs = new Set<() => void>();
+  private readonly durableWatched = new Set<string>();
 
   /**
    * Which render we are on.
@@ -365,8 +401,17 @@ export class HookHost {
   /** Set on a host that will be discarded after one render. */
   private ephemeral = false;
 
-  constructor(onInvalidate: () => void = () => {}) {
+  constructor(
+    onInvalidate: () => void = () => {},
+    durable: DurableBinding | null = null,
+  ) {
     this.onInvalidate = onInvalidate;
+    this.durable = durable;
+  }
+
+  /** The vault this session writes durable cells through, if any. */
+  get durableBinding(): DurableBinding | null {
+    return this.durable;
   }
 
   /**
@@ -454,6 +499,9 @@ export class HookHost {
   }
 
   disposeAll(): void {
+    for (const stop of this.durableUnsubs) stop();
+    this.durableUnsubs.clear();
+    this.durableWatched.clear();
     for (const entry of this.entries.values()) {
       entry.disposed = true;
     }
@@ -462,6 +510,14 @@ export class HookHost {
 
   invalidate(): void {
     this.onInvalidate();
+  }
+
+  /** Watch a vault key for the life of this session. */
+  watchDurable(key: string): void {
+    if (!this.durable || this.durableWatched.has(key)) return;
+    this.durableWatched.add(key);
+    const stop = this.durable.vault.watch(key, () => this.onInvalidate());
+    this.durableUnsubs.add(stop);
   }
 
   /**
@@ -667,6 +723,101 @@ export function useState<T>(initial: T | (() => T)): [T, StateSetter<T>] {
 
   slot.setter = set;
   return [slot.value as T, set];
+}
+
+const DURABLE_NAME = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
+
+/**
+ * State owned by this person, not this socket.
+ *
+ * Survives reconnect and, when the runtime was given a file, a deploy.
+ * Default scope is this tab: a second window does not share the cell.
+ * Pass `{ share: "user" }` when every tab of this person should.
+ *
+ * The name is the author's key, not a tree address, so the cell is still
+ * there if the component moves. Values must be JSON.
+ */
+export function useDurable<T>(
+  name: string,
+  initial: T | (() => T),
+  options: DurableOptions = {},
+): [T, StateSetter<T>] {
+  const scope = requireScope("useDurable");
+  const host = scope.host;
+  const binding = host.durableBinding;
+  if (!binding) {
+    throw new ComponentError(
+      `<${scope.marker.name}> called useDurable("${name}") but this render ` +
+        `has no durable vault. The runtime must be constructed with one.`,
+    );
+  }
+  if (!DURABLE_NAME.test(name)) {
+    throw new ComponentError(
+      `useDurable("${name}") is not a usable name. Use a letter, then letters, digits, _ or -.`,
+    );
+  }
+
+  const share = options.share ?? "tab";
+  const key = durableCellKey({
+    share,
+    name,
+    identity: binding.identity(),
+    tab: binding.tab(),
+  });
+
+  const entry = scope.entry ?? host.openEntry(scope);
+  const index = scope.index;
+  scope.index += 1;
+
+  if (index >= entry.slots.length) {
+    if (!binding.vault.has(key)) {
+      binding.vault.set(key, cloneJson(resolveInitial(initial)));
+    }
+    host.watchDurable(key);
+    entry.slots.push({ kind: "durable", key, setter: null });
+  }
+
+  const slot = entry.slots[index];
+  if (!slot || slot.kind !== "durable") {
+    throw new ComponentError(
+      `<${entry.name}> at ${entry.key} hook ${index} was not a useDurable last render`,
+    );
+  }
+
+  if (slot.key !== key) {
+    if (!binding.vault.has(key)) {
+      binding.vault.set(key, cloneJson(resolveInitial(initial)));
+    }
+    host.watchDurable(key);
+    slot.key = key;
+    slot.setter = null;
+  }
+
+  if (slot.setter) {
+    return [binding.vault.get(slot.key) as T, slot.setter as StateSetter<T>];
+  }
+
+  const set: StateSetter<T> = (next) => {
+    if (entry.disposed) return;
+
+    if (activeScope) {
+      throw new ComponentError(
+        `<${entry.name}> at ${entry.key} set durable state while rendering, ` +
+          `which would re-render forever. Set it from an event handler.`,
+      );
+    }
+
+    const previous = binding.vault.get(slot.key) as T;
+    const value =
+      typeof next === "function" ? (next as (previous: T) => T)(previous) : next;
+
+    if (Object.is(value, previous)) return;
+    if (JSON.stringify(value) === JSON.stringify(previous)) return;
+    binding.vault.set(slot.key, value);
+  };
+
+  slot.setter = set;
+  return [binding.vault.get(slot.key) as T, set];
 }
 
 /**

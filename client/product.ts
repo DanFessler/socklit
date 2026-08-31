@@ -6,7 +6,12 @@ import {
 import { registerIsland } from "./island-catalog";
 import "./island-host";
 import { ClientRuntime } from "./runtime";
-import { attachSessionToken, isCredentialMessage, writeSessionToken } from "./session-token";
+import {
+  attachSessionToken,
+  attachTabId,
+  isCredentialMessage,
+  writeSessionToken,
+} from "./session-token";
 
 export { registerIsland };
 
@@ -36,6 +41,7 @@ function socketUrl(): string {
   }
   // Cross-origin `?ws=` cannot set our cookie. Fall back to the query token.
   if (explicitProtocol) attachSessionToken(url);
+  attachTabId(url);
   return url.toString();
 }
 

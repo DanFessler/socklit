@@ -44,6 +44,12 @@ render that produced it, so calling `bump()` three times with `setCount(count + 
 lands on `1`, not `3` — you use the updater form to accumulate, exactly as in
 React.
 
+**`useDurable` is the same shape, a different lifetime.** `useState` dies
+with the socket. `useDurable("wizard", initial)` survives reconnect and
+refresh of this tab. A second tab has its own cell unless you pass
+`{ share: "user" }`. Values must be JSON. The name is yours, not a tree
+address.
+
 **The rules of hooks are the rules of hooks.** Same order every render, no
 conditionals, no loops, no calls after an early return. The runtime checks this
 and the error names the likely cause:
@@ -135,8 +141,8 @@ what the todo app does.
 
 ### 3. There is no `useEffect`
 
-The hook surface is four functions: `useState`, `useRef`, `useStore`, and
-`useContext`. The absence of `useEffect` is not an omission waiting to be filled
+The hook surface is five functions: `useState`, `useDurable`, `useRef`,
+`useStore`, and `useContext`. The absence of `useEffect` is not an omission waiting to be filled
 — a server has no DOM, so the most common effect in React
 (`useEffect(() => ref.current.focus())`) has nothing to act on. That particular
 effect has a replacement, but not as an effect: focus is requested by a value in

@@ -225,6 +225,10 @@ Three different things, not a binary:
 
 - **This connection.** `useState` — open/closed chrome, flash messages.
   Dies with the socket.
+- **This person, this task.** `useDurable("wizard", initial)` —
+  reconnect and refresh keep it. A second tab has its own cell unless
+  you pass `{ share: "user" }`. `listen({ durableFile })` writes the
+  cells so a restart keeps them.
 - **This source.** `useStore(source)` — every connected replica that
   read that object re-renders when it changes. Not “the internet”;
   the sessions on this process that subscribed.
@@ -516,11 +520,11 @@ The two import graphs must not mix: the server never imports the
 
 ## `socklit/server` exports
 
-`html`, `component`, `component.tag`, `keyed`, `useState`,
+`html`, `component`, `component.tag`, `keyed`, `useState`, `useDurable`,
 `useRef`, `useStore`, `createContext`, `useContext`, `changeSource`, `ChangeSource`,
 `createJsonStore`, `JsonStore`, `StoreError`, `signTicket`, `verifyTicket`,
 `listen`, `identify` (on `listen`), `origin` (on `listen`), `PROTOCOL_VERSION`,
-`sessionToken`, `SESSION_COOKIE`, `SESSION_QUERY`, `parseCookies`,
+`sessionToken`, `SESSION_COOKIE`, `SESSION_QUERY`, `TAB_QUERY`, `parseCookies`,
 `defineIsland`, `mount`, `slot`, `IslandServerEvents`, `SessionHandle`,
 `SessionContext`, `IdentifyRequest`, and the event payload types.
 

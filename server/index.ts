@@ -1,9 +1,12 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { WebSocketServer } from "ws";
 
 import { DEFAULT_PROTOCOL_PORT, MAX_MESSAGE_BYTES } from "../shared/protocol";
 import { RuntimeMetrics } from "./metrics";
 import { discoverProbes } from "./probes/discover";
+import { DurableVault } from "./durable";
 import { Runtime } from "./runtime";
 
 const port = Number(process.env["PORT"] ?? DEFAULT_PROTOCOL_PORT);
@@ -24,17 +27,25 @@ if (probes.length === 0) {
  * also means cross-probe render sharing (design-probes.md S1/A6) would have to
  * be introduced deliberately rather than emerging by accident.
  */
+const DATA_ROOT = fileURLToPath(new URL("../data/", import.meta.url));
+
 const hosted = new Map(
-  probes.map((probe) => {
-    const metrics = new RuntimeMetrics();
-    const runtime = new Runtime({
-      createApp: (session) => probe.createApp(session),
-      ...(probe.subscribe ? { subscribe: probe.subscribe } : {}),
-      onLog: (message) => console.log(`[${probe.id}] ${message}`),
-      metrics,
-    });
-    return [probe.id, { probe, runtime, metrics }] as const;
-  }),
+  await Promise.all(
+    probes.map(async (probe) => {
+      const metrics = new RuntimeMetrics();
+      const durable = await DurableVault.file(
+        join(DATA_ROOT, probe.id, "durable.json"),
+      );
+      const runtime = new Runtime({
+        createApp: (session) => probe.createApp(session),
+        ...(probe.subscribe ? { subscribe: probe.subscribe } : {}),
+        onLog: (message) => console.log(`[${probe.id}] ${message}`),
+        metrics,
+        durable,
+      });
+      return [probe.id, { probe, runtime, metrics }] as const;
+    }),
+  ),
 );
 
 for (const { probe } of hosted.values()) {
@@ -109,11 +120,12 @@ server.listen(port, () => {
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.on(signal, () => {
     console.log(`\n[server] ${signal} received, shutting down`);
-    for (const { runtime } of hosted.values()) {
-      runtime.dispose();
-    }
-    sockets.close();
-    server.close(() => process.exit(0));
+    const runtimes = [...hosted.values()].map(({ runtime }) => runtime);
+    for (const runtime of runtimes) runtime.dispose();
+    void Promise.all(runtimes.map((runtime) => runtime.flushDurable())).then(() => {
+      sockets.close();
+      server.close(() => process.exit(0));
+    });
   });
 }
 

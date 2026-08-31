@@ -13,9 +13,11 @@ export {
   useContext,
   useRef,
   useState,
+  useDurable,
   useStore,
   type ComponentFactory,
   type ComponentOptions,
+  type DurableOptions,
   type RenderOutput,
 } from "./component";
 
@@ -36,7 +38,7 @@ export { listen, type IdentifyRequest, type ListenHandle, type ListenOptions } f
 
 export { parseCookies } from "./cookies";
 export { sessionToken } from "./session-cookie";
-export { SESSION_COOKIE, SESSION_QUERY } from "../shared/protocol";
+export { SESSION_COOKIE, SESSION_QUERY, TAB_QUERY } from "../shared/protocol";
 
 export type { SessionHandle } from "./session";
 export type { ChangeListener, SessionContext } from "./probes/types";

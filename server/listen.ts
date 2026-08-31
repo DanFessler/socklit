@@ -8,6 +8,7 @@ import type { ChangeListener, ProbeInstance, SessionContext } from "./probes/typ
 import { PROTOCOL_VERSION } from "./protocol-version";
 import { servePublicFile } from "./public-dir";
 import { tokenIdentifyRequest } from "./reidentify";
+import { DurableVault } from "./durable";
 import { Runtime } from "./runtime";
 import { readSessionBody, writeSessionCookie } from "./session-cookie";
 
@@ -59,6 +60,11 @@ export type ListenOptions<User = unknown> = {
   origin?: string | string[];
   port?: number;
   onLog?: (message: string) => void;
+  /**
+   * File for `useDurable` cells. Survives a process restart. Omit and
+   * the vault is memory-only: reconnect works, a deploy does not.
+   */
+  durableFile?: string;
 };
 
 export type ListenHandle = {
@@ -87,11 +93,15 @@ export async function listen<User = unknown>(
   const log = options.onLog ?? ((message: string) => console.log(`[socklit] ${message}`));
   const publicDir = options.publicDir;
   const identify = options.identify;
+  const durable = options.durableFile
+    ? await DurableVault.file(options.durableFile)
+    : DurableVault.memory();
 
   const runtime = new Runtime({
     createApp,
     ...(options.subscribe ? { subscribe: options.subscribe } : {}),
     onLog: log,
+    durable,
     reidentify: async (token, params) => {
       if (!identify) return null;
       return identify(tokenIdentifyRequest(token, params, {}));
@@ -184,7 +194,9 @@ export async function listen<User = unknown>(
           new Promise((done) => {
             runtime.dispose();
             sockets.close();
-            server.close(() => done());
+            server.close(() => {
+              void runtime.flushDurable().then(() => done());
+            });
           }),
       });
     });

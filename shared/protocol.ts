@@ -124,6 +124,13 @@ export type ServerErrorCode =
 export const SESSION_COOKIE = "socklit_session";
 export const SESSION_QUERY = SESSION_COOKIE;
 
+/**
+ * Per-tab id the replica sends on connect. Survives refresh of this tab
+ * (`sessionStorage`). A new tab mints a new one. `useDurable` keys on it
+ * so a reconnect is not the other window's draft.
+ */
+export const TAB_QUERY = "socklit_tab";
+
 export type ServerMessage =
   | { type: "templates"; templates: WireTemplate[] }
   | {

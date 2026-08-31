@@ -38,8 +38,8 @@ export const API_SECTIONS: CatalogSection[] = [
     id: "hooks",
     title: "Hooks",
     intro:
-      "useState is this tab — chrome and flash messages. useStore records that this session read a source. useRef never schedules a render. Context is provide(value, within), not a provider element.",
-    entries: ["useState", "useStore", "useRef", "createContext", "useContext"],
+      "useState is this connection — chrome and flash messages. useDurable is this person, this task: reconnect keeps it, a second tab does not unless you pass { share: \"user\" }. useStore records that this session read a source. useRef never schedules a render. Context is provide(value, within), not a provider element.",
+    entries: ["useState", "useDurable", "useStore", "useRef", "createContext", "useContext"],
   },
   {
     id: "store",
@@ -80,6 +80,7 @@ export const API_SECTIONS: CatalogSection[] = [
       "parseCookies",
       "SESSION_COOKIE",
       "SESSION_QUERY",
+      "TAB_QUERY",
     ],
   },
   {
@@ -208,6 +209,18 @@ if (!title) {
   setError("Title is required");
   return;
 }`,
+    status: "shipped",
+  },
+  {
+    id: "useDurable",
+    name: "useDurable",
+    module: "socklit/server",
+    signature:
+      'useDurable<T>(name: string, initial: T | (() => T), options?: { share?: "tab" | "user" }): [T, (next: T | ((prev: T) => T)) => void]',
+    meaning:
+      "State owned by this person, not this socket. Survives reconnect and, when listen({ durableFile }) is set, a deploy. Default scope is this tab — a second window does not share. Pass { share: \"user\" } when every tab of this person should. The name is the author's key (letter, then letters, digits, _ or -), not a tree address. Values must be JSON.",
+    example: `const [wizard, setWizard] = useDurable("wizard", { step: 1 });
+const [filters, setFilters] = useDurable("queue-filters", { query: "" }, { share: "user" });`,
     status: "shipped",
   },
   {
@@ -421,9 +434,9 @@ await listen({
     name: "ListenOptions",
     module: "socklit/server",
     signature:
-      "type ListenOptions<User> = { app?: () => RenderOutput; createApp?: CreateApp<User>; identify?: …; subscribe?: (listener: ChangeListener) => () => void; publicDir?: string; port?: number; onLog?: (message: string) => void }",
+      "type ListenOptions<User> = { app?: () => RenderOutput; createApp?: CreateApp<User>; identify?: …; subscribe?: (listener: ChangeListener) => () => void; publicDir?: string; durableFile?: string; port?: number; onLog?: (message: string) => void }",
     meaning:
-      "listen() takes app or createApp, not both. subscribe should call listener(store) so useStore(store) can skip sessions that did not read it. publicDir is a built-files directory (usually dist/) served next to the socket.",
+      "listen() takes app or createApp, not both. subscribe should call listener(store) so useStore(store) can skip sessions that did not read it. publicDir is a built-files directory (usually dist/) served next to the socket. durableFile is the JSON file for useDurable cells — omit and reconnect still works, a process exit does not.",
     status: "shipped",
   },
   {
@@ -469,6 +482,15 @@ await listen({
     signature: "const SESSION_QUERY: typeof SESSION_COOKIE",
     meaning:
       "Query-string name for the same token. Used when the replica cannot set a cookie (?ws= cross-origin). Same string as SESSION_COOKIE.",
+    status: "shipped",
+  },
+  {
+    id: "TAB_QUERY",
+    name: "TAB_QUERY",
+    module: "socklit/server",
+    signature: 'const TAB_QUERY: "socklit_tab"',
+    meaning:
+      "Query-string name for this tab's durable id. The replica mints one in sessionStorage and sends it on every connect. useDurable keys on it so reconnect and refresh keep the cell and a second tab does not.",
     status: "shipped",
   },
   {

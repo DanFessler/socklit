@@ -7,4 +7,5 @@ await listen({
   subscribe: (onChange) => store.onChange(() => onChange(store)),
   // After `vite build`, this process is the page and the socket.
   publicDir: "dist",
+  durableFile: "data/durable.json",
 });

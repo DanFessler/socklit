@@ -32,28 +32,33 @@ without knowing what LiveView concluded is wasted work. See
 
 ## Results
 
-Six probes are built, measured and written up: [ticking clock](probes/clock.md),
+Seven probes are built, measured and written up: [ticking clock](probes/clock.md),
 [route divergence](probes/routes.md), [menu-heavy admin](probes/admin.md),
-[ledger](probes/ledger.md), [odds board](probes/odds.md), and
-[permission-filtered console](probes/roles.md). Each carries its own findings
+[ledger](probes/ledger.md), [odds board](probes/odds.md),
+[permission-filtered console](probes/roles.md), and
+[checkout wizard](probes/checkout.md). Each carries its own findings
 document with methodology and caveats. This section records what they settled.
 
-| Question | Verdict | Evidence |
-| --- | --- | --- |
-| **S1** unit of replication | **Resolved: the subtree.** Session-level sharing is worth exactly nothing | routes, odds, roles |
-| **S2** where navigation lives | **Resolved: subtree swap with a stable shell**, which the runtime already does | routes |
-| **S3** granularity of invalidation | **Resolved: do not build dependency tracking.** Two narrower mechanisms instead | clock, ledger |
-| **S4** what is a session | **Still open.** No probe built; needs the checkout wizard | — |
-| **S5** initial state and first paint | **New, unprobed.** No probe needed it because none served a visitor without a socket | — |
-| **A1** uncontrolled escape | **Confirmed unusable as policy**, with three new failure modes | admin |
-| **A2** client primitives | **Adopt.** The minimum set is one primitive, and it is necessary but not sufficient | admin, ledger |
-| **A3** open islands | **Adopt separately, and do not build A2 on it.** Authoring prototype on this branch | admin, islands |
-| **A4** declarative prediction | **Close it unbuilt.** Reachable coverage is 20%, not 80%, and A2 plus A9 cover it | ledger, odds |
-| **A5** windowed collections | **Promoted.** Now the binding constraint in two probes rather than a future concern | ledger, admin |
-| **A6** shared subtree rendering | **Build, per-subtree from the start.** The blocker was the handler signature, which has since been changed | odds, routes, roles |
-| **A7** delta mutations | **Still refused.** No probe challenged it | — |
-| **A8** durable sessions | **Still open.** Same gap as S4 | — |
-| **A9** acknowledgment affordances | **New entry, and it displaces A4.** Legal everywhere prediction is not; [probe specified](#specified-but-not-built-the-claim-queue) | routes, odds |
+**Resolved means decided, not shipped.** The verdict is the answer. **Shipped**
+is whether that answer is in the runtime. A refused or closed-unbuilt item is
+decided and deliberately absent.
+
+| Question | Verdict | Shipped | Evidence |
+| --- | --- | --- | --- |
+| **S1** unit of replication | **Resolved: the subtree.** Session-level sharing is worth exactly nothing | No. Census only; A6 is the implementation | routes, odds, roles |
+| **S2** where navigation lives | **Resolved: subtree swap with a stable shell**, which the runtime already does | Yes, as authoring (shell + hole). No first-class route body | routes |
+| **S3** granularity of invalidation | **Resolved: do not build dependency tracking.** Two narrower mechanisms instead | Partial. Read-scoped invalidation yes; subtree `cached()` no | clock, ledger |
+| **S4** what is a session | **Resolved: three tiers, author picks at the hook.** A connection is not a person and not a task | Yes. `useState` is the connection; `useDurable` is the task; the store is everyone | [checkout](probes/checkout.md) |
+| **S5** initial state and first paint | **New, unprobed.** No probe needed it because none served a visitor without a socket | No. First paint still needs the socket | — |
+| **A1** uncontrolled escape | **Confirmed unusable as policy**, with three new failure modes | n/a — refuse | admin |
+| **A2** client primitives | **Adopt.** The minimum set is one primitive, and it is necessary but not sufficient | No. `useGate` / `useEcho` / `useSelection` still proposed | admin, ledger |
+| **A3** open islands | **Adopt separately, and do not build A2 on it.** Authoring prototype on this branch | Yes. `<mount>` is in the product runtime | admin, islands |
+| **A4** declarative prediction | **Close it unbuilt.** Reachable coverage is 20%, not 80%, and A2 plus A9 cover it | n/a — closed unbuilt | ledger, odds |
+| **A5** windowed collections | **Promoted.** Now the binding constraint in two probes rather than a future concern | No | ledger, admin |
+| **A6** shared subtree rendering | **Build, per-subtree from the start.** The blocker was the handler signature, which has since been changed | No. `(event, session)` shipped; `shared()` did not | odds, routes, roles |
+| **A7** delta mutations | **Still refused.** No probe challenged it | n/a — refuse | — |
+| **A8** durable sessions | **Build `useDurable`.** Specified by checkout; the middle tier S4 named | Yes. Per-tab by default; `{ share: "user" }` for every tab of this person; `listen({ durableFile })` survives a deploy | [checkout](probes/checkout.md) |
+| **A9** acknowledgment affordances | **New entry, and it displaces A4.** Legal everywhere prediction is not; [probe specified](#specified-but-not-built-the-claim-queue) | No. `pending()` still proposed | routes, odds |
 
 Four results cut across the whole suite.
 
@@ -440,15 +445,28 @@ survives reconnect and is keyed by user identity, and connection state that is
 allowed to die — and who decides which tier a given piece of state belongs to,
 the framework or the app author?
 
-**Still open, and now the largest unanswered question in the document.** No probe
-addressed it: the checkout wizard was not built. What the built probes add is
-circumstantial pressure. The admin probe's state inventory shows how much
-per-session state a realistic screen accumulates — tab, filter text, sort, column
-visibility, selection, dialog and draft — all of which lives in `createApp`
-closures and all of which dies on disconnect. The odds probe measured **350 KB
-retained per session** against a 10.3 KB serialized tree, a 34x retention factor,
-which is what a reconnect would have to rebuild. Every probe therefore assumes a
-tier that does not exist, and none of them had to say so.
+**Resolved: three tiers, and the author picks at the hook.** The
+[checkout wizard](probes/checkout.md) put the same four-step draft in the two
+homes that exist. `useState` dies on reconnect. A per-user row in the store
+survives reconnect and is shared by every tab of that user. Placed orders
+survive either way. A help flag that is always `useState` dies even when the
+draft is stored. Those are three lifetimes, not one session with options:
+
+1. **Store** — catalog, stock, orders. Survives disconnect, deploy, and a
+   second tab.
+2. **This person, this task** — the wizard. Must survive the socket. Must not
+   be the other tab's stepper unless the author says so. Does not exist.
+3. **This connection** — help, hover, toast. Allowed to die. `useState`.
+
+Identity (`identify`, `grant`, a cookie, `?user=`) names the person. It is not
+a place to put the draft. Who decides is the author: a cart is durable in one
+product and a draft in another. The framework's job is to make the three calls
+read differently. A8 is the missing name for tier 2.
+
+What the earlier probes added is still true and is now priced as rebuild cost
+rather than as the decision: the admin inventory is what dies with
+`useState`, and the odds probe's 350 KB retained is what a reconnect has to
+rebuild. Every probe assumed tier 2. Checkout is the one that had to say so.
 
 ### S5. What is the initial state, and does first paint need a session?
 
@@ -912,11 +930,18 @@ keyed by identity rather than by socket.
 Weakens nothing, costs a lot, and is the difference between a prototype and
 something that can be deployed on a Tuesday afternoon.
 
-**Still open, and every probe silently depends on it.** See S4. The measured
-figure that prices it is the odds board's 350 KB retained per session against a
-10.3 KB serialized tree — a 34x retention factor and 1.6x the 220 KB
-`economics.md` assumes — which is what a reconnect would have to rebuild and what
-a deploy destroys.
+**Shipped.** `useDurable(name, initial)` is keyed by identity and tab, not
+by socket. Default is this tab; `{ share: "user" }` shares across tabs of
+this person. `listen({ durableFile })` writes the vault so a deploy keeps
+in-flight work. See S4 and [checkout](probes/checkout.md). The two homes
+that existed before fail in opposite ways: `useState` loses the
+laptop-sleep case, a user-keyed store row loses the second-tab case. The
+measured figure that prices rebuild is still the odds board's 350 KB
+retained per session against a 10.3 KB serialized tree — a 34x retention
+factor and 1.6x the 220 KB `economics.md` assumes — which is what a
+reconnect has to rebuild and what a deploy would destroy without the
+file. Checkout did not re-measure that; it classified which of those
+bytes were *allowed* to die.
 
 ### A9. Acknowledgment affordances
 
@@ -995,7 +1020,7 @@ Applications that break something. Each names the questions it forces.
 | Claim queue | Two dispatchers, one work item, no guessing allowed | A9, A4 | [specified](#specified-but-not-built-the-claim-queue) |
 | Live-validating signup | Username availability plus a masked phone field | A2, A4 | — |
 | Menu-heavy admin | Dropdowns, modals, tooltips, popovers | A1-A3, the ownership taxonomy | [built](probes/admin.md) |
-| Checkout wizard | Four steps, then the laptop sleeps | S4, A8 | — |
+| Checkout wizard | Four steps, then the laptop sleeps | S4, A8 | [built](probes/checkout.md) |
 | Chart dashboard | Any real charting library | A3 | — |
 | Client islands | Radix + Tailwind behind `<mount>` / `<slot>` | A3 authoring | [built](probes/islands.md) |
 | Spreadsheet / editor | 10k cells, or collaborative text | A7, A5, A2 | — |
@@ -1422,6 +1447,11 @@ rather than by effort:
    cannot close alone.
 7. **A6, per-subtree, sharing template instances with per-session bindings.** The
    structural advantage, and the design is now specified rather than open.
+8. ~~**A8, `useDurable`.**~~ **Done.** `useDurable(name, initial)` is keyed by
+   identity and tab, not by socket. Default is this tab; `{ share: "user" }`
+   shares across tabs of this person. `listen({ durableFile })` writes the
+   vault to disk so a deploy keeps in-flight work. Checkout is the
+   specification and now the first caller.
 
 Read-scoped invalidation, S3's recommendation, was not on this list and has also
 been built — it needed no API and no probe to specify it. Two qualifications
@@ -1443,9 +1473,7 @@ Ordered by what they would settle, not by effort:
 - **Claim queue** — [specified above](#specified-but-not-built-the-claim-queue).
   The only probe that would settle a *new* register entry rather than refine a
   resolved one, and the cheapest on this list.
-- **Checkout wizard** — S4 and A8 are now the largest untouched questions in the
-  document, and every built probe silently assumes a session tier that does not
-  exist.
+- **Checkout wizard** — built. S4 is answered; A8 is specified and not shipped.
 - **Virtualized log** — would turn A5's promotion into a specification, and is the
   probe the admin and ledger findings both point at.
 - **Presence indicator** — the sparse-graph case that read-scoped invalidation

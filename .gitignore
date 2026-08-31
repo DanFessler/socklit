@@ -4,6 +4,7 @@ site/node_modules
 site/dist
 starter/data/
 site/data/
+data/*/durable.json
 apps/*/data/
 *.tmp
 *.log

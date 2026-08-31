@@ -5,6 +5,7 @@ import type { WebSocket } from "ws";
 import {
   MAX_MESSAGE_BYTES,
   PROTOCOL_VERSION,
+  TAB_QUERY,
   parseClientMessage,
   parseWireJson,
   type EventMessage,
@@ -17,6 +18,7 @@ import {
   type WireTemplate,
 } from "../shared/protocol";
 import { HookHost, type RenderOutput } from "./component";
+import { durableIdentity, DurableVault } from "./durable";
 import { diff } from "./diff";
 import { RuntimeMetrics } from "./metrics";
 import type {
@@ -62,6 +64,11 @@ export type RuntimeOptions = {
    * Also settable later via `setReidentify`.
    */
   reidentify?: ReidentifyFn;
+  /**
+   * Cells for `useDurable`. One table for every session of this runtime.
+   * Omit for an in-memory vault (reconnect works, a process exit does not).
+   */
+  durable?: DurableVault;
 };
 
 type Session = {
@@ -103,6 +110,7 @@ export class Runtime {
   private readonly unsubscribe: () => void;
   private readonly metrics: RuntimeMetrics | undefined;
   private onReidentify: ReidentifyFn | undefined;
+  private readonly durable: DurableVault;
 
   private readonly pendingSessions = new Set<Session>();
   private pendingFlush: Promise<void> | null = null;
@@ -112,6 +120,7 @@ export class Runtime {
     this.log = options.onLog ?? (() => {});
     this.metrics = options.metrics;
     this.onReidentify = options.reidentify;
+    this.durable = options.durable ?? DurableVault.memory();
     this.unsubscribe =
       options.subscribe?.((source) => this.invalidate(source)) ?? (() => {});
   }
@@ -122,6 +131,11 @@ export class Runtime {
    */
   setReidentify(fn: ReidentifyFn): void {
     this.onReidentify = fn;
+  }
+
+  /** Drain `useDurable` file writes. Memory vaults resolve immediately. */
+  flushDurable(): Promise<void> {
+    return this.durable.flush();
   }
 
   get sessionCount(): number {
@@ -138,9 +152,17 @@ export class Runtime {
     // The host needs the session to invalidate it, and the session needs the
     // host to render. One of them has to be late.
     let self: Session | null = null;
-    const hooks = new HookHost(() => {
-      if (self) this.invalidateSession(self);
-    });
+    const hooks = new HookHost(
+      () => {
+        if (self) this.invalidateSession(self);
+      },
+      {
+        vault: this.durable,
+        identity: () =>
+          self ? durableIdentity(self.context.user, self.context.params) : null,
+        tab: () => self?.context.params.get(TAB_QUERY) ?? null,
+      },
+    );
 
     const context: SessionContext = {
       id,

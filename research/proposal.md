@@ -5,10 +5,10 @@ What remains to be built, and why each piece earns its place.
 Every sketch here is written in terms of components and component-scoped state,
 and **those exist** — §0 is a short record of what they are, what they cost once
 measured, and which of the arguments made for them in advance turned out to be
-wrong. Three further items have since been built: key events and focus, handlers
-receiving the acting session, and read-scoped invalidation. Each is marked where
-it appears, and the shortcuts taken to get them shipped are in
-[`tech-debt.md`](tech-debt.md). Everything else is unbuilt.
+wrong. Four further items have since been built: key events and focus, handlers
+receiving the acting session, read-scoped invalidation, and `useDurable`.
+Each is marked where it appears, and the shortcuts taken to get them shipped
+are in [`tech-debt.md`](tech-debt.md). Everything else is unbuilt.
 
 ---
 
@@ -157,7 +157,7 @@ is the rule all of them have to satisfy.
 | `useState` | Server, this session | Dies with the socket | **No** | Built |
 | `useRef` | Server, this session | Dies with the socket | **No** | Built |
 | `useStore` | Server, everyone | Durable | Yes | Built; scoped per session, see §3 |
-| `useDurable` | Server, this session | Survives reconnect and deploy | **No** | Proposed, §4 |
+| `useDurable` | Server, this person / this tab | Survives reconnect and deploy | **No** | **Built**, §4 |
 | `useEcho` | Client, this browser | Dies with the socket | Yes | Proposed, §1 |
 | `useGate` | Client, this browser | Dies with the socket | Yes | Proposed, §2 |
 | `useSelection` | Client, this browser | Dies with the socket | Yes | Proposed, §2 |
@@ -289,7 +289,7 @@ few categories of application cannot be built at all.
 | Test resolver | Tests name controls by structural position and are brittle | Small | Proposed |
 | Windowed collections | A long list has no upper bound on payload size | Medium | Proposed |
 | `shared()` | Identical views are rendered once per viewer instead of once | Large | Proposed |
-| `useDurable` | A deployment discards every user's in-progress work | Medium | Proposed |
+| `useDurable` | A deployment discards every user's in-progress work | Medium | **Built** |
 
 ---
 
@@ -811,9 +811,9 @@ sees.
 
 A dispatch queue with a filter, a row menu, bulk selection, contended claims and
 live shared data, written with all of the above. `component`, `useState`,
-`useStore`, `focusWhen` and the two-argument handler signature are callable
-today; `useDurable`, `useEcho`, `useSelection`, `pending`, `personal` and
-`shared` are what §1 to §5 would add.
+`useDurable`, `useStore`, `focusWhen` and the two-argument handler signature
+are callable today; `useEcho`, `useSelection`, `pending`, `personal` and
+`shared` are what remains.
 
 ```ts
 export const DispatchQueue = component(() => {
@@ -944,36 +944,30 @@ order they were listed:
 | — | Key events and focus | Protocol-level, surface-independent, and everything interactive is inaccessible without it | **Built** |
 | — | Handlers receive the session | Protocol-level, small, and all sharing work was blocked behind it | **Built** |
 | — | Read-scoped invalidation | No authoring surface at all; removes the most obviously wasted work | **Built**, per session |
+| — | `useDurable` | The component layer moved state into places a socket drop destroys | **Built** |
 
 What is left, in order:
 
 | | Change | Why it comes here |
 | --- | --- | --- |
-| 1 | `useDurable` and reconnect | The component layer already shipped and already moved state into places a socket drop destroys |
-| 2 | `useEcho` | A correctness defect, not an optimization |
-| 3 | `useGate` | The largest single improvement to how the product feels |
-| 4 | `pending()` | Cheapest item on the list, and reduces server load rather than adding to it |
-| 5 | `useSelection` | Same mechanism as `useGate`, so nearly free once it exists |
-| 6 | `shared()` | The structural cost advantage; design settled, work not small |
-| 7 | Test resolver | Not user-facing, but the cost of skipping it compounds with every screen |
-| 8 | Windowed collections | Sets the ceiling on how large a screen can be |
+| 1 | `useEcho` | A correctness defect, not an optimization |
+| 2 | `useGate` | The largest single improvement to how the product feels |
+| 3 | `pending()` | Cheapest item on the list, and reduces server load rather than adding to it |
+| 4 | `useSelection` | Same mechanism as `useGate`, so nearly free once it exists |
+| 5 | `shared()` | The structural cost advantage; design settled, work not small |
+| 6 | Test resolver | Not user-facing, but the cost of skipping it compounds with every screen |
+| 7 | Windowed collections | Sets the ceiling on how large a screen can be |
 
-**Durable sessions are now first, and shipping the component layer is what moved
-them.** The argument in §4 was written as a forecast and has since come true: the
-conversions put routes, selected ids and open/closed flags into `useState`, so a
-socket drop now loses more than it did, invisibly and without the user having done
-anything. The alternative to doing the work is a documented restriction that
-`useState` holds only what a user can afford to lose mid-task, which is hard to
-police and easy to forget — an argument for building it rather than writing it
-down.
+**`useDurable` has shipped.** Default is this tab: reconnect and refresh keep
+the cell, a second tab has its own. `{ share: "user" }` is every tab of this
+person. `listen({ durableFile })` writes the vault so a deploy keeps
+in-flight work. Identity is `session.user` (string, number, or `{ id }`)
+or `?user=`. The replica sends `?socklit_tab=`.
 
-Two items on this list are not merely unbuilt but genuinely undecided, and both
-were left out of the increment above for that reason rather than for size.
-`useDurable` needs an answer to what a session *is* — what identity it is keyed
-by, and what happens when the same identity connects twice. Windowed collections
+One item on this list is still genuinely undecided. Windowed collections
 need an answer to who owns scroll position, and the wire needs move, insert and
 delete operations before reordering can cost less than a resend. Everything
-between them is specified well enough to start.
+else is specified well enough to start.
 
 ---
 

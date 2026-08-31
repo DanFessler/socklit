@@ -17,7 +17,12 @@ import { registerIsland } from "./island-catalog";
 import { ClientRuntime } from "./runtime";
 import "./island-host";
 import { ProtocolLog } from "./protocol-log";
-import { attachSessionToken, isCredentialMessage, writeSessionToken } from "./session-token";
+import {
+  attachSessionToken,
+  attachTabId,
+  isCredentialMessage,
+  writeSessionToken,
+} from "./session-token";
 
 for (const [name, component] of Object.entries(islandComponents)) {
   registerIsland(name, component);
@@ -58,6 +63,7 @@ function socketUrl(): string {
   }
   url.searchParams.set("probe", probeId);
   attachSessionToken(url);
+  attachTabId(url);
   return url.toString();
 }
 
