@@ -12,6 +12,7 @@ import {
   isCredentialMessage,
   writeSessionToken,
 } from "./session-token";
+import { checkPeer, expectedAppName, healthUrlFromSocket } from "./peer";
 
 export { registerIsland };
 
@@ -49,11 +50,25 @@ let socket: WebSocket | null = null;
 let runtime: ClientRuntime | null = null;
 let reconnectDelay = RECONNECT_MIN_MS;
 
-connect();
+void connect();
 
-function connect(): void {
+async function connect(): Promise<void> {
+  const href = socketUrl();
+  const expected = expectedAppName(mount.dataset["app"]);
+  const peer = await checkPeer(healthUrlFromSocket(href), expected);
+  if (!peer.ok) {
+    setStatus("error", peer.reason);
+    if (peer.retry) {
+      window.setTimeout(() => {
+        void connect();
+      }, reconnectDelay);
+      reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX_MS);
+    }
+    return;
+  }
+
   setStatus("connecting", "connecting");
-  const active = new WebSocket(socketUrl());
+  const active = new WebSocket(href);
   socket = active;
 
   runtime = new ClientRuntime({
@@ -113,7 +128,9 @@ function connect(): void {
       socket = null;
       runtime = null;
       setStatus("disconnected", "disconnected");
-      window.setTimeout(connect, reconnectDelay);
+      window.setTimeout(() => {
+        void connect();
+      }, reconnectDelay);
       reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX_MS);
     }
   });

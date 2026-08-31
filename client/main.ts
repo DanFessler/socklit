@@ -1,5 +1,4 @@
 import {
-  DEFAULT_PROTOCOL_PORT,
   PROTOCOL_VERSION,
   type ClientMessage,
   type ServerMessage,
@@ -17,6 +16,7 @@ import { registerIsland } from "./island-catalog";
 import { ClientRuntime } from "./runtime";
 import "./island-host";
 import { ProtocolLog } from "./protocol-log";
+import { checkPeer, expectedAppName, healthUrlFromSocket } from "./peer";
 import {
   attachSessionToken,
   attachTabId,
@@ -53,8 +53,10 @@ const probeId = query.get("probe") ?? "todo";
 // Every query parameter is forwarded, so a probe can be configured per tab
 // (?probe=routes&user=alice) without the client knowing what any of it means.
 function socketUrl(): string {
-  const base =
-    query.get("ws") ?? `ws://${location.hostname}:${DEFAULT_PROTOCOL_PORT}`;
+  // Same origin as the page. Vite proxies /ws to this lab's listen(),
+  // not to whichever product app bound 8787.
+  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  const base = query.get("ws") ?? `${protocol}//${location.host}/ws`;
   const url = new URL(base);
   for (const [key, value] of query) {
     if (key !== "ws" && key !== "latency" && key !== "jitter") {
@@ -89,7 +91,7 @@ const outbound = new OrderedDelay<OutboundFrame>(deliverOutbound);
 initLatencyControls();
 void initProbePicker();
 renderPerceived(null);
-connect();
+void connect();
 
 /** Populated from the protocol server, so adding a probe needs no client change. */
 async function initProbePicker(): Promise<void> {
@@ -124,9 +126,18 @@ async function initProbePicker(): Promise<void> {
   }
 }
 
-function connect(): void {
+async function connect(): Promise<void> {
+  const href = socketUrl();
+  const expected = expectedAppName(mount.dataset["app"]);
+  const peer = await checkPeer(healthUrlFromSocket(href), expected);
+  if (!peer.ok) {
+    setStatus("error", peer.reason);
+    if (peer.retry) scheduleReconnect();
+    return;
+  }
+
   setStatus("connecting", "connecting");
-  const active = new WebSocket(socketUrl());
+  const active = new WebSocket(href);
   socket = active;
 
   // A fresh replica per connection: template ids are process-local to the
@@ -287,7 +298,9 @@ function renderPerceived(observedMs: number | null): void {
 function scheduleReconnect(): void {
   const delay = reconnectDelay;
   reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX_MS);
-  window.setTimeout(connect, delay);
+  window.setTimeout(() => {
+    void connect();
+  }, delay);
 }
 
 function setStatus(state: string, text: string): void {
