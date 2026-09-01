@@ -12,6 +12,7 @@ export default defineConfig({
   server: {
     port: 5174,
     strictPort: true,
+    allowedHosts: [".ngrok-free.app", ".ngrok.app", ".ngrok.io"],
     fs: { allow: [socklitRoot] },
     proxy: {
       "/ws": { target: `http://127.0.0.1:${protocolPort}`, ws: true },

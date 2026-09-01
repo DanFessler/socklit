@@ -83,17 +83,45 @@ body {
   font-size: 0.85rem;
 }
 
-.sign-book select {
+.sign-book input {
   min-width: 12rem;
   background: var(--felt-deep);
   color: var(--cream);
   border: 1px solid var(--gold);
   padding: 0.4rem 0.5rem;
+  font: inherit;
 }
 
 .guest-note {
   margin-bottom: 1.2rem;
   opacity: 0.85;
+}
+
+.new-table {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent);
+  background: color-mix(in srgb, var(--felt-deep) 75%, transparent);
+}
+
+.new-table label {
+  display: flex;
+  flex: 1 1 14rem;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.new-table input {
+  background: var(--felt-deep);
+  color: var(--cream);
+  border: 1px solid var(--gold);
+  padding: 0.45rem 0.55rem;
+  font: inherit;
 }
 
 .hall {
@@ -194,11 +222,40 @@ button.ghost:hover {
   filter: brightness(1.08);
 }
 
+button.primary.danger {
+  background: #d99078;
+}
+
 .banner {
   background: color-mix(in srgb, #000 25%, transparent);
   border-left: 3px solid var(--gold);
   padding: 0.7rem 0.85rem;
   margin: 0 0 1rem;
+}
+
+.turn-banner {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--cream) 24%, transparent);
+  background: color-mix(in srgb, #000 24%, transparent);
+  font-size: 1.05rem;
+}
+
+.turn-banner.yours {
+  border-color: #a9efbc;
+  background: color-mix(in srgb, #65c982 18%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, #a9efbc 16%, transparent);
+}
+
+.turn-banner.yours strong {
+  color: #baf4c9;
+}
+
+.turn-banner.theirs strong {
+  color: var(--gold);
 }
 
 .room-seats {
@@ -215,11 +272,54 @@ button.ghost:hover {
 }
 
 .board {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   aspect-ratio: 1;
   border: 10px solid var(--wood-edge);
   box-shadow: inset 0 0 0 2px #1a100a;
+}
+
+.board[data-your-turn="true"] {
+  box-shadow:
+    inset 0 0 0 2px #1a100a,
+    0 0 0 3px #a9efbc,
+    0 0 22px color-mix(in srgb, #7ee69b 38%, transparent);
+}
+
+.board-cursor {
+  position: absolute;
+  z-index: 3;
+  width: 2.25rem;
+  height: 2.6rem;
+  pointer-events: none;
+  transform: translate(-0.7rem, -0.7rem);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.75));
+}
+
+.cursor-hand {
+  position: relative;
+  z-index: 2;
+  display: block;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif;
+  font-size: 1.85rem;
+  line-height: 1;
+  transform-origin: 50% 65%;
+  transition: transform 70ms ease;
+}
+
+.cursor-hand.grabbing {
+  transform: scale(0.88) translateY(0.08rem);
+}
+
+.board-cursor .hand-ghost {
+  position: absolute;
+  z-index: 1;
+  left: 0.2rem;
+  top: 0.8rem;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
 }
 
 .sq {

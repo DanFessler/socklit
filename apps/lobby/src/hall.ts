@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { createJsonStore, StoreError } from "socklit/server";
 
 import {
@@ -163,6 +165,30 @@ export function clearTable(hall: Hall, tableId: string): Hall {
     return hall;
   }
   return replaceTable(hall, blankTable(table.id, table.name));
+}
+
+export function createTable(hall: Hall, name: string): Hall {
+  const trimmed = name.trim().slice(0, 40);
+  if (
+    !trimmed ||
+    hall.tables.some((table) => table.name.toLocaleLowerCase() === trimmed.toLocaleLowerCase())
+  ) {
+    return hall;
+  }
+  return {
+    tables: [...hall.tables, blankTable(`table-${randomUUID()}`, trimmed)],
+  };
+}
+
+export function closeTable(hall: Hall, tableId: string): Hall {
+  const table = hall.tables.find((row) => row.id === tableId);
+  if (
+    !table ||
+    (table.phase !== "dark-wins" && table.phase !== "light-wins")
+  ) {
+    return hall;
+  }
+  return { tables: hall.tables.filter((row) => row.id !== tableId) };
 }
 
 export function play(

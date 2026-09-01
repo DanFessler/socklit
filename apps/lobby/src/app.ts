@@ -8,11 +8,23 @@ import {
   useStore,
 } from "socklit/server";
 
-import { clearTable, colorOf, play, seatedAt, sit, stand, standEverywhere, store, type Table } from "./hall";
-import { PEOPLE, displayName, personByName, type Person } from "./people";
+import { cursors } from "./cursors";
+import {
+  clearTable,
+  closeTable,
+  colorOf,
+  createTable,
+  play,
+  seatedAt,
+  sit,
+  stand,
+  standEverywhere,
+  store,
+  type Table,
+} from "./hall";
 import { PieceHand, type HandMan } from "./piece-hand";
 import { BOARD, idx, type Color } from "./rules";
-import { issue, tickets } from "./tickets";
+import { MAX_GUEST_NAME, displayName, issue, tickets, type Person } from "./tickets";
 
 export { store };
 
@@ -30,12 +42,19 @@ function menOn(table: Table): HandMan[] {
   return men;
 }
 
-function phaseLabel(table: Table): string {
+function turnOwner(table: Table): string {
+  const id = table.turn === "dark" ? table.darkId : table.lightId;
+  return id ? displayName(id) : table.turn === "dark" ? "Dark" : "Light";
+}
+
+function phaseLabel(table: Table, user: Person | null = null): string {
   switch (table.phase) {
     case "waiting":
       return "Waiting for players";
     case "live":
-      return table.turn === "dark" ? "Live — dark to move" : "Live — light to move";
+      return user && colorOf(table, user.id) === table.turn
+        ? "Your turn"
+        : `${turnOwner(table)} to move`;
     case "frozen":
       return "Frozen — a player stood up";
     case "dark-wins":
@@ -102,16 +121,24 @@ const TableCard = component(function TableCard(props: {
   user: Person | null;
   onWatch: (id: string) => void;
 }) {
+  const actionLabel =
+    props.table.phase === "frozen"
+      ? "Open to reset"
+      : props.table.phase === "dark-wins" || props.table.phase === "light-wins"
+        ? "Open finished game"
+        : props.user && colorOf(props.table, props.user.id)
+          ? "Open your table"
+          : "Watch";
   return html`
     <article class="table-card">
       <header>
         <h2>${props.table.name}</h2>
-        <p class=${`badge ${props.table.phase}`}>${phaseLabel(props.table)}</p>
+        <p class=${`badge ${props.table.phase}`}>${phaseLabel(props.table, props.user)}</p>
       </header>
       ${Seat({ table: props.table, seat: "dark", user: props.user, onSat: () => props.onWatch(props.table.id) })}
       ${Seat({ table: props.table, seat: "light", user: props.user, onSat: () => props.onWatch(props.table.id) })}
       <button type="button" class="primary" @click=${() => props.onWatch(props.table.id)}>
-        ${props.user && colorOf(props.table, props.user.id) ? "Open your table" : "Watch"}
+        ${actionLabel}
       </button>
     </article>
   `;
@@ -123,24 +150,40 @@ const TableRoom = component(function TableRoom(props: {
   onBack: () => void;
 }) {
   const you = props.user ? colorOf(props.table, props.user.id) : null;
-  const canClear =
+  const yourTurn = props.table.phase === "live" && you === props.table.turn;
+  const activeCursor =
+    props.table.phase === "live"
+      ? useStore(cursors).cursorFor(props.table.id)
+      : null;
+  const visibleCursor =
+    activeCursor?.color === props.table.turn && activeCursor.color !== you
+      ? activeCursor
+      : null;
+  const canReset = Boolean(props.user) && props.table.phase === "frozen";
+  const canClose =
     Boolean(props.user) &&
-    (props.table.phase === "frozen" ||
-      props.table.phase === "dark-wins" ||
-      props.table.phase === "light-wins");
+    (props.table.phase === "dark-wins" || props.table.phase === "light-wins");
 
   return html`
     <section class="room">
       <div class="room-bar">
         <button type="button" class="ghost" @click=${() => props.onBack()}>Back to the hall</button>
         <h2>${props.table.name}</h2>
-        <p class=${`badge ${props.table.phase}`}>${phaseLabel(props.table)}</p>
+        <p class=${`badge ${props.table.phase}`}>${phaseLabel(props.table, props.user)}</p>
       </div>
 
+      ${props.table.phase === "live"
+        ? html`<p class=${`turn-banner ${yourTurn ? "yours" : "theirs"}`}>
+            <strong>${yourTurn ? "Your turn." : `${turnOwner(props.table)}’s turn.`}</strong>
+            ${you
+              ? ` You’re playing ${you === "dark" ? "Dark" : "Light"}.`
+              : ` ${props.table.turn === "dark" ? "Dark" : "Light"} is moving.`}
+          </p>`
+        : ""}
       ${props.table.phase === "frozen"
         ? html`<p class="banner frozen">
             This table is frozen. A seated player stood up mid-game. Pieces stay where they
-            are. Nobody may sit or move until someone signed in clears the cloth.
+            are. Reset the table below to clear both seats and start a fresh game.
           </p>`
         : ""}
       ${props.table.phase === "dark-wins"
@@ -162,13 +205,59 @@ const TableRoom = component(function TableRoom(props: {
           .turn=${props.table.turn}
           .live=${props.table.phase === "live"}
           .men=${menOn(props.table)}
-          .onMove=${(fromRow: number, fromCol: number, toRow: number, toCol: number) => {
-            const actor = props.user;
+          .activeCursor=${visibleCursor}
+          .onMove=${(
+            fromRow: number,
+            fromCol: number,
+            toRow: number,
+            toCol: number,
+            session: SessionHandle,
+          ) => {
+            const actor = session.user as Person | null;
             if (!actor) return;
             void store.mutate((hall) => ({
               next: play(hall, props.table.id, actor.id, fromRow, fromCol, toRow, toCol),
               result: undefined,
             }));
+          }}
+          .onCursorMove=${(
+            x: number,
+            y: number,
+            pressed: boolean,
+            holdingRow: number | null,
+            holdingCol: number | null,
+            session: SessionHandle,
+          ) => {
+            const actor = session.user as Person | null;
+            const table = store.state.tables.find((row) => row.id === props.table.id);
+            if (!actor || !table || table.phase !== "live") return;
+            const color = colorOf(table, actor.id);
+            if (!color || color !== table.turn) return;
+            const validHolding =
+              Number.isInteger(holdingRow) &&
+              Number.isInteger(holdingCol) &&
+              holdingRow !== null &&
+              holdingCol !== null &&
+              holdingRow >= 0 &&
+              holdingRow < BOARD &&
+              holdingCol >= 0 &&
+              holdingCol < BOARD &&
+              table.squares[idx(holdingRow, holdingCol)]?.color === color;
+            cursors.move(
+              table.id,
+              color,
+              x,
+              y,
+              pressed === true,
+              validHolding ? { row: holdingRow, col: holdingCol } : null,
+            );
+          }}
+          .onCursorLeave=${(session: SessionHandle) => {
+            const actor = session.user as Person | null;
+            const table = store.state.tables.find((row) => row.id === props.table.id);
+            if (!actor || !table) return;
+            const color = colorOf(table, actor.id);
+            if (color) cursors.clear(table.id, color);
           }}
         ></mount>
       </div>
@@ -179,7 +268,7 @@ const TableRoom = component(function TableRoom(props: {
         you do not have to take. The hall decides what is legal.
       </p>
 
-      ${canClear
+      ${canReset
         ? html`<button
             type="button"
             class="primary"
@@ -191,7 +280,24 @@ const TableRoom = component(function TableRoom(props: {
               }));
             }}
           >
-            Clear the table
+            Reset frozen table
+          </button>`
+        : ""}
+      ${canClose
+        ? html`<button
+            type="button"
+            class="primary danger"
+            @click=${(_event: unknown, session: SessionHandle) => {
+              if (!session.user) return;
+              void store
+                .mutate((hall) => ({
+                  next: closeTable(hall, props.table.id),
+                  result: undefined,
+                }))
+                .then(() => props.onBack());
+            }}
+          >
+            Close finished game
           </button>`
         : ""}
     </section>
@@ -238,26 +344,24 @@ export const App = component(function App(props: { user: Person | null }) {
         : html`<form
             class="sign-book"
             @submit=${(event: SubmitPayload, session: SessionHandle) => {
-              const name = event.fields["name"]?.trim() ?? "";
-              const member = personByName(name);
-              if (!member) {
-                setFlash("That name is not in the book.");
+              const token = issue(event.fields["name"] ?? "");
+              if (!token) {
+                setFlash("Give yourself a name.");
                 return;
               }
               setFlash("");
-              session.grant(issue(member));
+              session.grant(token);
             }}
           >
             <label>
-              Sign the book
-              <select name="name" required>
-                <option value="">Who are you?</option>
-                ${keyed(
-                  PEOPLE,
-                  (person) => person.id,
-                  (person) => html`<option value=${person.name}>${person.name}</option>`,
-                )}
-              </select>
+              Sign in as a guest
+              <input
+                name="name"
+                maxlength=${MAX_GUEST_NAME}
+                placeholder="Your name"
+                autocomplete="nickname"
+                required
+              />
             </label>
             <button class="primary" type="submit">Sign in</button>
           </form>`}
@@ -268,24 +372,54 @@ export const App = component(function App(props: { user: Person | null }) {
     ${props.user
       ? ""
       : html`<p class="guest-note">
-          Guests may walk the hall and watch a table. Sitting and moving are for people in
-          the book.
+          Anyone may walk the hall and watch a table. Sign in with a name to sit and
+          move. The same browser keeps that guest after a refresh.
         </p>`}
 
     ${table
       ? TableRoom({ table, user: props.user, onBack: () => setView(null) })
-      : html`<section class="hall">
-          ${keyed(
-            hall.tables,
-            (row) => row.id,
-            (row) =>
-              TableCard({
-                table: row,
-                user: props.user,
-                onWatch: (id) => setView(id),
-              }),
-          )}
-        </section>`}
+      : html`
+          ${props.user
+            ? html`<form
+                class="new-table"
+                @submit=${(event: SubmitPayload, session: SessionHandle) => {
+                  if (!session.user) return;
+                  const name = event.fields["name"]?.trim() ?? "";
+                  if (!name) {
+                    setFlash("Give the new table a name.");
+                    return;
+                  }
+                  if (hall.tables.some((row) => row.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+                    setFlash("A table with that name is already open.");
+                    return;
+                  }
+                  setFlash("");
+                  void store.mutate((current) => ({
+                    next: createTable(current, name),
+                    result: undefined,
+                  }));
+                }}
+              >
+                <label>
+                  Open a new table
+                  <input name="name" maxlength="40" placeholder="Table name" required />
+                </label>
+                <button class="primary" type="submit">Open table</button>
+              </form>`
+            : ""}
+          <section class="hall">
+            ${keyed(
+              hall.tables,
+              (row) => row.id,
+              (row) =>
+                TableCard({
+                  table: row,
+                  user: props.user,
+                  onWatch: (id) => setView(id),
+                }),
+            )}
+          </section>
+        `}
   `;
 });
 
