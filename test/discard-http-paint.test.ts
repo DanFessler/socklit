@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { discardHttpPaint } from "../client/runtime";
 
-function mount(paint: string | undefined, children: number) {
+function mount(paint: string | undefined, children: number, part: unknown = { stale: true }) {
   let count = children;
   return {
     dataset: { ...(paint ? { paint } : {}) },
@@ -10,6 +10,7 @@ function mount(paint: string | undefined, children: number) {
     replaceChildren: () => {
       count = 0;
     },
+    _$litPart$: part,
     get size() {
       return count;
     },
@@ -33,5 +34,12 @@ describe("discardHttpPaint", () => {
     const app = mount("html+adopt", 3);
     discardHttpPaint(app);
     expect(app.size).toBe(3);
+    expect(app._$litPart$).toEqual({ stale: true });
+  });
+
+  it("drops a stale lit root part so a reconnect can render again", () => {
+    const app = mount("html", 3);
+    discardHttpPaint(app);
+    expect(app._$litPart$).toBeUndefined();
   });
 });

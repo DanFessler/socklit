@@ -389,6 +389,10 @@ export type PaintMount = {
 export function discardHttpPaint(mount: PaintMount): void {
   const paint = mount.dataset.paint;
   if (paint === "adopt" || paint === "html+adopt") return;
+  // lit caches the root ChildPart on the container. replaceChildren() ejects
+  // the marker nodes but leaves that part behind, so the next render() throws
+  // and the replica reconnects in a loop.
+  delete (mount as PaintMount & { _$litPart$?: unknown })._$litPart$;
   if (!mount.hasChildNodes()) return;
   mount.replaceChildren();
 }
