@@ -11,7 +11,15 @@ to read the framework’s internals.
 
 ## Install and run
 
-From a copy of the `starter/` directory:
+Socklit is not published yet, so your `package.json` points `socklit` at
+a checkout with `file:`. That links the directory rather than copying a
+tarball, so build it once before installing your app:
+
+```bash
+npm install   # in the Socklit checkout; the prepare script builds it
+```
+
+Then, from a copy of the `starter/` directory:
 
 ```bash
 npm install
@@ -29,7 +37,9 @@ process (`npm start`). HTTPS is still your reverse proxy, not this
 process.
 
 You import the framework as `socklit/server`. You do not import files
-from inside the Socklit repo.
+from inside the Socklit repo. Those exports resolve to built JavaScript
+and `.d.ts`, so `tsc` and Vite both stop at the package boundary and
+your build never reports an error in a file you did not write.
 
 Edit `src/app.ts`, save, refresh if the replica does not hot-replace
 the tree (the server restarts on save; the client reconnects).

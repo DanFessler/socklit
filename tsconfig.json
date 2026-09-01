@@ -24,6 +24,7 @@
     "client",
     "islands",
     "test",
+    "tsup.config.ts",
     "vite.config.ts",
     "vitest.config.ts"
   ]

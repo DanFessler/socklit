@@ -333,6 +333,48 @@ call, page stays “connected,” island dead.
 **What retires it.** `react` / `react-dom` as `peerDependencies` when
 the package is published. Until then the Vite line is the contract.
 
+### Islands are a neutral wire contract behind a React-only host
+
+**What was built.** Island props are JSON and callbacks are named messages,
+which is renderer-neutral. The client boundary is not:
+`registerIsland()` accepts a React `ComponentType`, `island-host.ts` mounts it
+with `react-dom`'s `createRoot`, and a slotted server subtree finds its
+`<socklit-slot>` through React context. `socklit/client` imports that host
+eagerly, and the root package carries React as a direct dependency as well as an
+optional peer.
+
+**Why it is safe today.** Every island in the probes is React, several use
+Radix, and the starter explicitly teaches React islands. There is no existing
+non-React caller being excluded by a contract it previously had.
+
+**What makes it wrong.** The first app that already uses Vue, Svelte, Preact,
+Web Components, or no framework has to install and ship React to use an island.
+The same problem exists one step earlier for an app with no islands: the base
+replica still imports the React host. A wire feature has become a framework
+choice, and there is no public seam where an author can supply a renderer or
+mount a naked DOM control.
+
+**What retires it.** Split the neutral island bridge from renderer adapters.
+Core owns the custom-element boundary, JSON prop and callback conversion,
+instance address, callback result, and server-slot painter. A public adapter
+contract owns the renderer lifecycle: mount into a host, update an existing
+mount without losing local state, expose or claim a slot well, and unmount.
+Ship React as one adapter rather than as the definition of an island; keep its
+context helper there. Prove the contract with a bare DOM or Web Component
+adapter that an app can use directly or copy to build another integration.
+Vue/Svelte/Preact adapters are follow-on packages, not branches in core.
+
+The retirement is incomplete if it only changes the type of
+`registerIsland`. A real seam has all of these properties:
+
+- importing the base replica does not import React;
+- an app can register the first-party React adapter explicitly;
+- an app can register its own adapter without importing Socklit internals;
+- prop updates preserve renderer-local state at the same island address;
+- keyed removal and snapshot replacement unmount exactly once;
+- terminal islands do not pay for the slot machinery;
+- a hosted server subtree can be placed without a React context.
+
 ### Rejected submits wipe the form, and native validation can skip the handler
 
 **What was built.** Getting-started documents the unbound-input rule
@@ -579,20 +621,30 @@ Builders will “fix” a working widget.
 
 **What retires it.** `registerIsland<P>(name, ComponentType<P>)`.
 
-### App `tsc` follows imports into Socklit
+### App `tsc` follows imports into Socklit — **retired**
 
-**What was built.** App tsconfigs resolve `socklit/server` to this
+**What was built.** App tsconfigs resolved `socklit/server` to this
 repo’s `.ts`. Floor scored `src/` only because the host reported
 errors in `island-host.ts` / `runtime.ts` / `component.ts`.
 
-**Why it is safe today.** We typecheck the host in this repo.
+**What retired it.** `npm run build` emits ESM bundles and declarations
+to `dist/package/`, and every `socklit/*` export names those artifacts
+under explicit `types` / `import` conditions. An app’s program now stops
+at a `.d.ts`; nothing pulls host sources in. `npm run verify:package`
+fails if an export ever points back at TypeScript.
 
-**What makes it wrong.** A first user’s `tsc` is red for files they
-did not write. They will think they broke the install.
+This also removed a Windows-only failure that had nothing to do with
+types. Vite’s default config loader externalizes a linked dependency
+rather than compiling it, so `import { firstPaint } from "socklit/vite"`
+handed raw TypeScript to Node’s ESM resolver, which requires explicit
+file extensions — `ERR_MODULE_NOT_FOUND` on `shared/protocol`. macOS hid
+it only because that checkout resolved the plugin through a compiled
+path. Apps had been working around it with `vite --configLoader=runner`;
+they run plain `vite` again.
 
-**What retires it.** Published (or `file:`) types that do not pull
-the host sources into the app program — `types` / emitted `.d.ts`,
-and `skipLibCheck` in the starter.
+**What remains a shortcut.** The build output is gitignored, so a fresh
+clone must `npm install` at the repo root — the `prepare` script is what
+builds it — before an app that links `file:` can resolve anything.
 
 ### Island callbacks vs `@click` still teach two spellings
 

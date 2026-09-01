@@ -5,25 +5,44 @@
   "type": "module",
   "description": "A server-authoritative UI runtime: you write components next to your data; the browser is a replica.",
   "files": [
-    "server",
-    "client",
-    "shared",
+    "dist/package",
     "package.json"
   ],
   "exports": {
-    "./server": "./server/public.ts",
-    "./client": "./client/product.ts",
-    "./client/islands": "./client/island-catalog.ts",
-    "./client/styles.css": "./client/product.css",
-    "./vite": "./server/vite-plugin.ts"
+    "./server": {
+      "types": "./dist/package/types/server/public.d.ts",
+      "import": "./dist/package/server.js"
+    },
+    "./client": {
+      "types": "./dist/package/types/client/product.d.ts",
+      "import": "./dist/package/client.js"
+    },
+    "./client/islands": {
+      "types": "./dist/package/types/client/island-catalog.d.ts",
+      "import": "./dist/package/client-islands.js"
+    },
+    "./client/styles.css": "./dist/package/client-styles.css",
+    "./vite": {
+      "types": "./dist/package/types/server/vite-plugin.d.ts",
+      "import": "./dist/package/vite.js"
+    }
+  },
+  "engines": {
+    "node": ">=20"
   },
   "scripts": {
     "dev": "concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
     "dev:server": "tsx watch server/index.ts",
     "dev:client": "vite",
+    "build": "npm run build:clean && npm run build:js && npm run build:types",
+    "build:clean": "node -e \"require('fs').rmSync('dist/package',{recursive:true,force:true})\"",
+    "build:js": "tsup",
+    "build:types": "tsc -p tsconfig.build.json --noCheck",
     "build:client": "vite build",
+    "prepare": "npm run build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "verify:package": "tsx scripts/verify-package.ts",
     "bench": "tsx scripts/bench-render.ts"
   },
   "peerDependencies": {
@@ -31,8 +50,12 @@
     "react-dom": "^19.0.0"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": true },
-    "react-dom": { "optional": true }
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@radix-ui/react-popover": "^1.1.23",
@@ -50,6 +73,7 @@
     "@types/ws": "^8.18.1",
     "concurrently": "^10.0.5",
     "tailwindcss": "^4.3.3",
+    "tsup": "^8.5.1",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",

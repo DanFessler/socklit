@@ -16,14 +16,24 @@ A shared list. Copy this folder out of the Socklit repo. Point
 Inside this repo the same field is `"file:.."`. Leave that if you
 are running from `starter/` here.
 
-3. Install and start:
+3. Build Socklit once, in the repo you just pointed at:
+
+```bash
+npm install   # in the Socklit repo; this also builds it
+```
+
+`file:` links a directory rather than copying a tarball, so the
+build output has to exist on disk before this app can resolve
+`socklit/server`. Repeat it after changing Socklit itself.
+
+4. Install and start:
 
 ```bash
 npm install
 npm run dev
 ```
 
-4. Open <http://localhost:5173>. That is the only URL. Vite serves
+5. Open <http://localhost:5173>. That is the only URL. Vite serves
    modules; the HTML is a `listen()` render. Disable JavaScript and
    the page is still there.
 
@@ -63,4 +73,6 @@ the dedupe and the first mount is an invalid hook call.
 | `index.html` | Must contain `<main id="app">` and `<link>` the stylesheet |
 
 You import `socklit/server` and `socklit/client`. You do not import
-files from inside the Socklit repo.
+files from inside the Socklit repo — those four subpaths are the whole
+surface, and they resolve to built JavaScript and `.d.ts`, so your
+`tsc` never reports an error in a file you did not write.

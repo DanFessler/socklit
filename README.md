@@ -34,9 +34,9 @@ npm install
 npm run dev
 ```
 
-- Client: printed by Vite, usually <http://localhost:5173> (it shifts if the
-  port is taken)
-- Protocol: `ws://localhost:8787`, health check at <http://localhost:8787/health>
+- Client: <http://localhost:5173>. Vite enforces this port and exits if it is
+  already in use.
+- Protocol: `ws://localhost:8795`, health check at <http://localhost:8795/health>
 
 Override with `PORT` (server) and `?ws=ws://host:port` (client query string).
 Data lives in [`data/todos.json`](data/todos.json); point elsewhere with
@@ -46,6 +46,23 @@ Data lives in [`data/todos.json`](data/todos.json); point elsewhere with
 npm test        # unit and integration tests
 npm run typecheck
 ```
+
+### The package
+
+Apps do not import this repo's TypeScript. `socklit/server`, `socklit/client`,
+`socklit/client/islands`, and `socklit/vite` resolve to ESM plus declarations
+under `dist/package/`, which is what lets plain Node and a Vite config loader
+load them without a TypeScript loader in the way.
+
+```bash
+npm run build            # dist/package: bundles, .d.ts, client-styles.css
+npm run verify:package   # exports resolve to built files, and Node can load them
+```
+
+The root `npm install` runs the build for you (`prepare`). The output is
+gitignored, so a fresh clone has to install at the root before any `file:`
+consumer — `starter/`, `site/`, anything in `apps/` — can resolve `socklit`.
+Rebuild after changing `server/`, `client/`, or `shared/`.
 
 ## Documentation
 

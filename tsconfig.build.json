@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "rootDir": ".",
+    "outDir": "dist/package/types"
+  },
+  "include": [
+    "client/env.d.ts",
+    "server/public.ts",
+    "server/vite-plugin.ts",
+    "client/product.ts",
+    "client/island-catalog.ts"
+  ]
+}
