@@ -7,6 +7,7 @@ import { MAX_MESSAGE_BYTES, PROTOCOL_VERSION } from "../shared/protocol";
 import { resolveAppName } from "./app-name";
 import { RuntimeMetrics } from "./metrics";
 import { discoverProbes } from "./probes/discover";
+import { catalogOf, wrapProbe } from "./probes/shell";
 import { DurableVault } from "./durable";
 import {
   DEFAULT_SHELL,
@@ -38,6 +39,8 @@ if (probes.length === 0) {
  */
 const DATA_ROOT = fileURLToPath(new URL("../data/", import.meta.url));
 
+const catalog = catalogOf(probes);
+
 const hosted = new Map(
   await Promise.all(
     probes.map(async (probe) => {
@@ -45,8 +48,9 @@ const hosted = new Map(
       const durable = await DurableVault.file(
         join(DATA_ROOT, probe.id, "durable.json"),
       );
+      const wrapped = wrapProbe(probe, catalog);
       const runtime = new Runtime({
-        createApp: (session) => probe.createApp(session),
+        createApp: (session) => wrapped.createApp(session),
         ...(probe.subscribe ? { subscribe: probe.subscribe } : {}),
         onLog: (message) => console.log(`[${probe.id}] ${message}`),
         metrics,

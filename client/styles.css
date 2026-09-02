@@ -45,7 +45,7 @@ body {
   grid-template-columns: minmax(0, 1fr) 22rem;
   gap: 1.5rem;
   align-items: start;
-  max-width: 68rem;
+  max-width: 84rem;
   margin: 0 auto;
   padding: 2.5rem 1.5rem;
 }
@@ -62,6 +62,82 @@ body {
   border-radius: var(--radius);
   padding: 1.75rem;
   min-height: 20rem;
+}
+
+.app:has(.probe-shell) {
+  padding: 0;
+  overflow: hidden;
+}
+
+.probe-shell {
+  display: grid;
+  grid-template-columns: 12.5rem minmax(0, 1fr);
+  align-items: start;
+  min-height: 20rem;
+}
+
+.probe-nav {
+  padding: 1.15rem 0.85rem;
+  border-right: 1px solid var(--border);
+  background: var(--surface-sunken);
+  min-height: 100%;
+}
+
+.probe-nav-label {
+  margin: 0 0.55rem 0.65rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+}
+
+.probe-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.probe-nav-link {
+  display: block;
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.85rem;
+  line-height: 1.25;
+}
+
+.probe-nav-link:hover {
+  background: var(--surface-raised);
+}
+
+.probe-nav-link.is-current {
+  background: color-mix(in oklab, var(--accent) 18%, var(--surface));
+}
+
+.probe-body {
+  min-width: 0;
+  padding: 1.75rem;
+}
+
+@media (max-width: 48rem) {
+  .probe-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .probe-nav {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .probe-nav-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
 }
 
 .app-header h1 {

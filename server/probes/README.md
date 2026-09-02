@@ -18,7 +18,12 @@ research/probes/<id>.md         findings write-up, required
 ```
 
 Discovery is by directory scan, so there is no registry file to edit. Drop the
-directory in and the probe appears at `?probe=<id>`.
+directory in and the probe appears at `?probe=<id>`. The lab wraps every
+probe in `ProbeShell` (`shell.ts`): a side nav of `<a href="?probe=">`
+links. That is a new document, not a session route — each probe has its
+own runtime. Isolated tests call `createApp` directly and do not get the
+shell, so measurements stay clean. Import the wrapper from `shell.ts` if
+you host a probe on its own `listen()`.
 
 ## The contract
 
